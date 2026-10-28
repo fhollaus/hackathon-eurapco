@@ -58,7 +58,8 @@ async def run(path):
 
 async def resume(path, run_id=None):
     event = json.loads(path.read_text(encoding="utf-8"))
-    if not os.environ.get("ANTHROPIC_API_KEY"):
+    # An insurer decision is applied by the harness alone; only a clarification reply calls the model.
+    if event.get("event_type") == "clarification_reply" and not os.environ.get("ANTHROPIC_API_KEY"):
         raise CliError("ANTHROPIC_API_KEY is not set. Copy .env.example to .env and add your key.")
     from app.runtime import ResumeError, admit, resume_request
     try:
@@ -95,7 +96,7 @@ def main():
     sub.add_parser("check", help="Check MCP discovery/read/write without an API key.")
     command = sub.add_parser("run", help="Run one independent initial ticket through the real baseline.")
     command.add_argument("ticket", type=Path)
-    command = sub.add_parser("resume", help="Deliver a clarification reply to the waiting run of its ticket.")
+    command = sub.add_parser("resume", help="Deliver a clarification reply or insurer decision to the waiting run of its ticket.")
     command.add_argument("event", type=Path)
     command.add_argument("--run", dest="run_id", help="Waiting run to resume; default: latest for the ticket.")
     command = sub.add_parser("validate-log", help="Validate a cumulative evaluation JSON file.")

@@ -69,6 +69,14 @@ def waiting(start):
     return store, run_id, log
 
 
+def decision(ticket, verdict, **changes):
+    event = {"event_type": "insurer_decision", "event_id": f"EV-{ticket}-02", "ticket_id": ticket,
+             "timestamp": "2026-10-22T10:02:00+02:00", "decision": verdict}
+    if verdict == "reject":
+        event["reason"] = "The proposed change is declined for this training execution."
+    return {**event, **changes}
+
+
 def reply(**changes):
     return {**json.loads((ROOT / "examples/events/clarification_reply.json").read_text()), **changes}
 
@@ -110,20 +118,23 @@ def test_second_clarification_is_closed_as_insufficient_information(waiting):
     assert record["human_rounds"]["clarification"] == 1
 
 
-def test_replies_that_cannot_resume_are_rejected_without_logging(waiting):
+def test_refused_replies_are_logged_in_their_run_without_a_transition(waiting):
     _, _, log = waiting
-    before = log.path.read_bytes()
-    decision = {"event_type": "insurer_decision", "event_id": "EV-T04-02", "ticket_id": "T04",
-                "timestamp": "2026-10-22T10:02:00+02:00", "decision": "approve"}
-    with pytest.raises(ResumeError, match="accepts only a clarification_reply"):
-        admit(decision)
+    before = EvaluationLog.load(log.path).record
+    with pytest.raises(ResumeError, match="accepts only clarification_reply events"):
+        admit(decision("T04", "approve"))
     with pytest.raises(ResumeError, match="already processed"):
         admit(reply(event_id="EV-T04-01"))
     with pytest.raises(ResumeError, match="No workflow found for ticket T99"):
-        admit(reply(ticket_id="T99"))
+        admit(reply(ticket_id="T99"))  # No run to log it in.
     with pytest.raises(ResumeError, match="in run RUN-other"):
         admit(reply(), "RUN-other")
-    assert log.path.read_bytes() == before
+    after = EvaluationLog.load(log.path).record
+    added = after["events"][len(before["events"]):]
+    assert [(e["kind"], e["data"]["error_type"], e["data"]["event"]["event_type"]) for e in added] == \
+        [("error", "ReplyRejected", "insurer_decision"), ("error", "ReplyRejected", "clarification_reply")]
+    assert (after["agent_state"], after["human_rounds"]) == (before["agent_state"], before["human_rounds"])
+    assert admit(reply())["agent_state"] == "awaiting_clarification"  # Still waiting for its one reply.
 
 
 @pytest.mark.parametrize("name, arguments, blocked", [
@@ -241,6 +252,13 @@ def claim_call(invoice_text):
         "invoice": invoice, "evidence_refs": ["request/invoice_text"]})
 
 
+def created_claim_id(messages):
+    """The claim ID returned to the scripted create_claim call."""
+    result = next(r["content"] for m in messages if m["role"] == "user" and isinstance(m["content"], list)
+                  for r in m["content"] if r.get("tool_use_id") == "toolu_create")
+    return json.loads(result)["data"]["claim_id"]
+
+
 def test_duplicate_invoice_is_not_registered_again(start):
     ticket = json.loads((ROOT / "examples/training/T13.json").read_text())  # Same invoice as CL-H001.
     model = ScriptedModel([claim_call(ticket["invoice_text"])],
@@ -256,13 +274,8 @@ def test_wrong_payment_is_blocked_and_the_calculated_one_is_paid(start):
     ticket = json.loads((ROOT / "examples/training/T08.json").read_text())
 
     def pay(amount, call_id):
-        def turn(messages):
-            created = json.loads(next(r["content"] for m in messages if m["role"] == "user" and
-                                      isinstance(m["content"], list) for r in m["content"]
-                                      if r.get("tool_use_id") == "toolu_create"))
-            return [ToolUseBlock(type="tool_use", id=call_id, name="pay_claim", input={
-                "policy_id": "POL-001", "claim_id": created["data"]["claim_id"], "amount": amount})]
-        return turn
+        return lambda messages: [ToolUseBlock(type="tool_use", id=call_id, name="pay_claim", input={
+            "policy_id": "POL-001", "claim_id": created_claim_id(messages), "amount": amount})]
 
     model = ScriptedModel([claim_call(ticket["invoice_text"])], pay("144.00", "toolu_pay1"), pay("104.00", "toolu_pay2"),
                           answer("completed", "paid", request_category="reimbursement_request"))
@@ -273,3 +286,100 @@ def test_wrong_payment_is_blocked_and_the_calculated_one_is_paid(start):
     assert [(c["status"], c["payment"]["amount"]) for c in claims] == [("paid", "104.00")]
     assert store.snapshot(run_id)["policies"]["POL-001"]["financial_terms"]["paid_consumption"] == "208.00"
     assert [e["data"]["error_type"] for e in log.record["events"] if e["kind"] == "error"] == ["AmountMismatch"]
+
+
+COVERAGE_PROPOSAL = {"operation": "update_coverage", "arguments": {
+    "policy_id": "POL-001", "changes": {"annual_limit": "10000.00", "deductible": "500.00"}}}
+
+
+@pytest.fixture
+def awaiting_insurer(start):
+    """T06 suspended on its combined coverage proposal."""
+    model = ScriptedModel(answer("awaiting_authorization", "authorization_requested",
+                                 request_category="coverage_change", proposal=COVERAGE_PROPOSAL))
+    store, run_id, log, _ = start("T06", model)
+    return store, run_id, log
+
+
+def statuses(record):
+    return [(e["data"]["agent_state"], e["data"]["request_outcome"]) for e in record["events"] if e["kind"] == "status"]
+
+
+def test_insurer_approval_executes_exactly_the_saved_proposal(awaiting_insurer):
+    store, run_id, log = awaiting_insurer
+    event = decision("T06", "approve")
+    final = asyncio.run(resume_request(event, admit(event), EvaluationLog.load(log.path)))  # No model involved.
+
+    assert (final["agent_state"], final["request_outcome"]) == ("completed", "updated")
+    terms = store.snapshot(run_id)["policies"]["POL-001"]["financial_terms"]
+    assert (terms["annual_limit"], terms["deductible"]) == ("10000.00", "500.00")
+    record = EvaluationLog.load(log.path).record
+    writes = [e["data"]["arguments"] for e in record["events"]
+              if e["kind"] == "tool_call" and e["data"]["name"] == "update_coverage"]
+    assert writes == [{"run_id": run_id, **COVERAGE_PROPOSAL["arguments"]}]
+    assert statuses(record) == [("awaiting_authorization", "authorization_requested"),
+                                ("processing", "in_progress"), ("completed", "updated")]
+    assert [e["data"]["event"]["event_type"] for e in record["events"] if e["kind"] == "input"] == \
+        ["request", "insurer_decision"]
+    assert record["human_rounds"] == {"clarification": 0, "authorization": 1}
+    with pytest.raises(ResumeError, match="completed, not waiting"):
+        admit(decision("T06", "approve", event_id="EV-T06-03"))  # No second round.
+
+
+def test_insurer_rejection_executes_nothing(awaiting_insurer):
+    store, run_id, log = awaiting_insurer
+    event = decision("T06", "reject")
+    final = asyncio.run(resume_request(event, admit(event), EvaluationLog.load(log.path)))
+
+    assert (final["agent_state"], final["request_outcome"]) == ("closed_without_execution", "insurer_rejected")
+    assert event["reason"] in final["reason"] and event["reason"] in final["message"]
+    terms = store.snapshot(run_id)["policies"]["POL-001"]["financial_terms"]
+    assert (terms["annual_limit"], terms["deductible"]) == ("3000.00", "50.00")
+    record = EvaluationLog.load(log.path).record
+    assert not [e for e in record["events"] if e["kind"] == "tool_call" and e["data"]["name"] == "update_coverage"]
+
+
+@pytest.mark.parametrize("verdict, status, paid, consumption", [
+    ("approve", "paid", "1560.00", "1664.00"), ("reject", "rejected", None, "104.00")])
+def test_insurer_decision_on_a_reimbursement_completes_the_claim_record(start, verdict, status, paid, consumption):
+    ticket = json.loads((ROOT / "examples/training/T11.json").read_text())  # 2000.00 -> 1560.00.
+
+    def pending(messages):
+        return [ToolUseBlock(type="tool_use", id="toolu_pending", name="record_claim_outcome", input={
+            "policy_id": "POL-001", "claim_id": created_claim_id(messages), "outcome": "pending_authorization",
+            "reason": "Final reimbursement 1560.00 is above 1500.00."})]
+
+    def wait(messages):
+        return answer("awaiting_authorization", "authorization_requested", request_category="reimbursement_request",
+                      proposal={"operation": "pay_claim", "arguments": {
+                          "policy_id": "POL-001", "claim_id": created_claim_id(messages), "amount": "1560.00"}})
+
+    store, run_id, log, final = start("T11", ScriptedModel([claim_call(ticket["invoice_text"])], pending, wait))
+    assert final["agent_state"] == "awaiting_authorization"
+    claim_id = final["proposal"]["arguments"]["claim_id"]
+
+    event = decision("T11", verdict)
+    final = asyncio.run(resume_request(event, admit(event), EvaluationLog.load(log.path)))
+
+    assert final["request_outcome"] == ("paid" if verdict == "approve" else "insurer_rejected")
+    snapshot = store.snapshot(run_id)
+    assert snapshot["claims"][claim_id]["status"] == status
+    assert (snapshot["claims"][claim_id]["payment"] or {}).get("amount") == paid
+    assert snapshot["policies"]["POL-001"]["financial_terms"]["paid_consumption"] == consumption
+
+
+def test_a_proposal_the_harness_cannot_execute_goes_back_to_the_model(start):
+    # 5000/200 needs no insurer: asking would waste the one authorization round.
+    needless = {"operation": "update_coverage", "arguments": {
+        "policy_id": "POL-001", "changes": {"annual_limit": "5000.00", "deductible": "200.00"}}}
+    model = ScriptedModel(answer("awaiting_authorization", "authorization_requested",
+                                 request_category="coverage_change", proposal=needless),
+                          [coverage_write(needless["arguments"]["changes"])],
+                          answer("completed", "updated", request_category="coverage_change"))
+    store, run_id, log, final = start("T05", model)
+
+    assert final["request_outcome"] == "updated"
+    assert "needs no insurer authorization" in model.seen[1][-1]["content"]
+    assert [e["data"]["error_type"] for e in log.record["events"] if e["kind"] == "error"] == ["InvalidProposal"]
+    assert log.record["human_rounds"] == {"clarification": 0, "authorization": 0}
+    assert store.snapshot(run_id)["policies"]["POL-001"]["financial_terms"]["annual_limit"] == "5000.00"

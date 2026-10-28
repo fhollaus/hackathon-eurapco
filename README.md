@@ -57,18 +57,29 @@ Each invocation is a **new independent
 execution**, with a fresh domain copy, run ID and cumulative log under `logs/`.
 The CLI prints both the response and evaluation-file path. Never commit `.env`.
 
-A request waiting for a clarification resumes in the **same** run and log:
+A waiting request resumes in the **same** run and log, on a clarification reply or an
+insurer decision:
 
 ```sh
 python -m app run examples/training/T04.json
 python -m app resume examples/events/clarification_reply.json   # --run RUN_ID to pick the run
+python -m app run examples/training/T06.json
+python -m app resume examples/events/insurer_approve.json       # or insurer_reject.json
 ```
 
 The reply is matched to the latest waiting run of its `ticket_id`. Workflow state
-(conversation, waiting state, human rounds, processed event IDs) is kept in
-`.runtime/workflows/RUN_ID.json`. A reply to a run that is not waiting, of the wrong
-type or already processed is rejected without touching the log. A second
-clarification is not asked: the request closes with `insufficient_information`.
+(conversation, waiting state, saved proposal, human rounds, processed event IDs) is kept
+in `.runtime/workflows/RUN_ID.json`. A reply to a run that is not waiting, of the wrong
+type or already processed is refused: it is recorded in that run's log as a
+`ReplyRejected` error event, without any state change. A second clarification is not
+asked: the request closes with `insufficient_information`.
+
+An insurer decision is applied without the model (and without an API key). Approval runs
+exactly the saved proposal once and reports the actual tool result; rejection runs nothing
+and closes with `insurer_rejected`. For a reimbursement the claim record is updated to
+`paid` or `rejected`. A proposal is only sent to the insurer if the harness can execute it
+exactly: `operation` and `arguments`, valid tool input, passing the guards below and really
+needing authorization. Otherwise it goes back to the model (`InvalidProposal` error event).
 
 Writes that need the insurer never reach the domain from the model: `terminate_policy`,
 `update_coverage` with a final limit above 5000.00 or deductible above 200.00, and
@@ -87,8 +98,7 @@ blocks any other amount (`AmountMismatch`) or a zero payment (`ZeroReimbursement
 Policy and reimbursement enquiries retrieve and explain existing records. A small
 keyword router chooses an agent. Both agents have monolithic prompts and their
 domain tools. Required human interactions are described in those prompts; the
-loop can ask/stop and resume on a clarification reply, but **does not yet resume
-on an insurer decision**: `resume` rejects it explicitly.
+loop can ask/stop and resume on a clarification reply or an insurer decision.
 
 Business checks mostly depend on prompt instructions. There is no finished
 clarification/authorization state machine, deterministic reimbursement calculator,

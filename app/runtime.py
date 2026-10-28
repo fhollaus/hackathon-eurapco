@@ -1,5 +1,6 @@
-"""Agent loop with persisted workflow state, so a waiting request can resume on its clarification reply.
-Writes that need the insurer are blocked in the loop: the model can only propose them."""
+"""Agent loop with persisted workflow state, so a waiting request resumes on its clarification reply or
+insurer decision. Writes that need the insurer are blocked in the loop: the model can only propose them,
+and only the harness executes an approved proposal."""
 
 import json
 import os
@@ -12,8 +13,9 @@ from anthropic import AsyncAnthropic
 
 from agents.administration.agent import system_prompt as admin_prompt
 from agents.claims.agent import system_prompt as claims_prompt
-from app.contracts import ROOT, atomic_json, document, validator
+from app.contracts import ROOT, TOOLS, atomic_json, document, validator
 from app.domain import error
+from app.evaluation import EvaluationLog
 from app.mcp_client import DomainClient
 from app.router import route
 from app.skills import load_skills
@@ -23,6 +25,10 @@ RESUMED_BY = {"awaiting_clarification": "clarification_reply", "awaiting_authori
 # Final values strictly above these need insurer authorization; equality is autonomous (docs/policy.md).
 COVERAGE_THRESHOLDS = {"annual_limit": Decimal("5000.00"), "deductible": Decimal("200.00")}
 REIMBURSEMENT_THRESHOLD = Decimal("1500.00")
+# The writes an insurer approval can release, per agent, and how the policyholder reads them.
+AUTHORIZABLE = {"administration": ("update_coverage", "terminate_policy"), "claims": ("pay_claim",)}
+DESCRIBED = {"update_coverage": "coverage change", "terminate_policy": "policy termination",
+             "pay_claim": "reimbursement"}
 # What the model must do instead of a write the harness blocked.
 INSTEAD = {
     "UnsupportedDecrease": "Only increases are supported and nothing was changed: close with "
@@ -39,7 +45,7 @@ INSTEAD = {
 
 
 class ResumeError(ValueError):
-    """A reply that cannot be admitted to a waiting workflow. Nothing was changed or logged."""
+    """A reply that cannot resume its run. Neither workflow nor domain changed; a known run logs the refusal."""
 
 
 def workflow_dir():
@@ -117,18 +123,22 @@ def admit(event, run_id=None):
     waiting = [workflow for workflow in candidates if workflow["agent_state"] in RESUMED_BY]
     if not waiting:
         latest = max(candidates, key=lambda workflow: workflow["updated_at"])
-        raise ResumeError(f"Run {latest['run_id']} of ticket {event['ticket_id']} is {latest['agent_state']}, "
-                          "not waiting; a reply cannot reopen or restart it.")
+        refuse(event, latest, f"Run {latest['run_id']} of ticket {event['ticket_id']} is {latest['agent_state']}, "
+                              "not waiting; a reply cannot reopen or restart it.")
     workflow = max(waiting, key=lambda workflow: workflow["updated_at"])
     expected = RESUMED_BY[workflow["agent_state"]]
     if event["event_type"] != expected:
-        raise ResumeError(f"Run {workflow['run_id']} is {workflow['agent_state']} and accepts only a "
-                          f"{expected}, not a {event['event_type']}.")
+        refuse(event, workflow, f"Run {workflow['run_id']} is {workflow['agent_state']} and accepts only "
+                                f"{expected} events, not {event['event_type']}.")
     if event["event_id"] in workflow["event_ids"]:
-        raise ResumeError(f"Event {event['event_id']} was already processed in run {workflow['run_id']}.")
-    if event["event_type"] == "insurer_decision":
-        raise ResumeError("Resuming on an insurer decision is not implemented yet.")
+        refuse(event, workflow, f"Event {event['event_id']} was already processed in run {workflow['run_id']}.")
     return workflow
+
+
+def refuse(event, workflow, reason):
+    """Record the refused reply in its run's log, as evidence, without any state transition."""
+    EvaluationLog.load(workflow["log_path"]).event("error", error_type="ReplyRejected", reason=reason, event=event)
+    raise ResumeError(reason)
 
 
 async def resume_request(event, workflow, log, provider=None):
@@ -138,6 +148,10 @@ async def resume_request(event, workflow, log, provider=None):
     save_workflow(workflow)  # Claim it before any work: a second delivery is now rejected by admit().
     with marks_failure(workflow):
         log.input(event)
+        if event["event_type"] == "insurer_decision":
+            log.status(agent_state="processing", request_outcome="in_progress",
+                       reason=f"Insurer decision received ({event['decision']}); applying it to the saved proposal.")
+            return await decide(event, workflow, log)
         log.status(agent_state="processing", request_outcome="in_progress",
                    reason="Clarification reply received; resuming the waiting request.")
         workflow["messages"].append({"role": "user", "content": (
@@ -155,7 +169,78 @@ async def advance(workflow, log, provider):
     """Run the agent on the workflow's conversation until it finishes or waits for a person."""
     agent = workflow["agent"]
     async with model_provider(provider) as client, DomainClient(workflow["run_id"], agent, log) as domain:
-        final = await agent_turns(client, domain, system_prompt(agent), workflow["messages"], agent, log)
+        final = await agent_turns(client, domain, system_prompt(agent), workflow["messages"], agent, log,
+                                  workflow["request"]["policy_id"])
+    return finish(workflow, log, final)
+
+
+async def decide(event, workflow, log):
+    """Apply the insurer decision without the model: approval runs exactly the saved proposal, once."""
+    proposal = workflow["proposal"]
+    operation, arguments = proposal.get("operation"), proposal.get("arguments") or {}
+    async with DomainClient(workflow["run_id"], workflow["agent"], log) as domain:
+        if event["decision"] == "reject":
+            if operation == "pay_claim":
+                await domain.call("record_claim_outcome", {
+                    "policy_id": arguments["policy_id"], "claim_id": arguments["claim_id"],
+                    "outcome": "rejected", "reason": "Insurer rejected: " + event["reason"]})
+            return finish(workflow, log, decided(
+                workflow, "closed_without_execution", "insurer_rejected",
+                f"The insurer rejected the proposal: {event['reason']}",
+                f"The insurer did not approve the {DESCRIBED.get(operation, 'request')}. Reason: {event['reason']} "
+                f"Nothing was {'paid' if operation == 'pay_claim' else 'changed'}."))
+        # An approval cannot make an unsupported write allowed: check the proposal again as it is executed.
+        problem = await proposal_problem(domain, workflow["agent"], workflow["request"]["policy_id"], proposal)
+        if problem:
+            return finish(workflow, log, decided(
+                workflow, "failed", "technical_failure", f"The approved proposal cannot be executed as saved: {problem}",
+                "The insurer approved your request, but it could not be carried out as proposed. Nothing was "
+                "changed; the case needs a manual check."))
+        result = await domain.call(operation, arguments)
+        if result["ok"] and operation == "pay_claim":
+            await domain.call("record_claim_outcome", {
+                "policy_id": arguments["policy_id"], "claim_id": arguments["claim_id"],
+                "outcome": "paid", "reason": f"Paid {arguments['amount']} after insurer approval."})
+    return finish(workflow, log, executed(workflow, operation, result))
+
+
+def decided(workflow, agent_state, request_outcome, reason, message):
+    """A harness-made final response, in the agent response shape, for the saved proposal."""
+    return {"request_category": workflow["request_category"], "agent_state": agent_state,
+            "request_outcome": request_outcome, "reason": reason, "message": message,
+            "question": None, "proposal": workflow["proposal"]}
+
+
+def executed(workflow, operation, result):
+    """The outcome of an approved proposal, reported from the actual tool result only."""
+    if not result["ok"]:
+        failure = result["error"]
+        return decided(workflow, "failed", "technical_failure",
+                       f"Approved {operation} failed: {failure['code']}: {failure['message']}",
+                       "The insurer approved your request, but carrying it out failed, so nothing is reported as "
+                       "done. The case needs a manual check.")
+    data = result["data"]
+    if operation == "pay_claim":
+        return decided(workflow, "completed", "paid",
+                       f"Insurer approved; payment {data['payment_id']} of {data['amount']} for claim {data['claim_id']}.",
+                       f"The insurer approved your reimbursement: EUR {data['amount']} was paid for claim "
+                       f"{data['claim_id']} (payment {data['payment_id']}).")
+    if not data["changed"]:
+        return decided(workflow, "completed", "no_change", f"Insurer approved; {operation} reported no change.",
+                       "The insurer approved your request. Your policy already had these values, so nothing changed.")
+    if operation == "terminate_policy":
+        return decided(workflow, "completed", "terminated",
+                       f"Insurer approved; policy {data['policy_id']} changed from {data['before_status']} to terminated.",
+                       f"The insurer approved the termination: policy {data['policy_id']} is now terminated.")
+    changes = [(field.replace("_", " "), data["before"][field], data["after"][field]) for field in data["changed_fields"]]
+    return decided(workflow, "completed", "updated",
+                   "Insurer approved; " + "; ".join(f"{f} {old} -> {new}" for f, old, new in changes) + ".",
+                   "The insurer approved your coverage change: "
+                   + " and ".join(f"{f} from EUR {old} to EUR {new}" for f, old, new in changes) + ".")
+
+
+def finish(workflow, log, final):
+    """Enforce the human-round rules, then record the observed transition in the log and the workflow."""
     if workflow["request_category"]:
         # A reply supplies missing facts; it does not change the operation already classified.
         final["request_category"] = workflow["request_category"]
@@ -189,7 +274,7 @@ def system_prompt(agent):
     prompt += json.dumps(document("agent-response.schema.json"))
     return prompt
 
-async def agent_turns(provider, domain, prompt, messages, agent, log):
+async def agent_turns(provider, domain, prompt, messages, agent, log, policy_id):
     """Model/tool loop. Appends every turn to messages, so a resumed run keeps its full context."""
     for _ in range(12):
         response = await provider.messages.create(
@@ -226,8 +311,36 @@ async def agent_turns(provider, domain, prompt, messages, agent, log):
         if final["request_category"] not in document("vocabulary.json")["request_categories"][agent]:
             raise ValueError("Agent returned a category from the other domain.")
         log.event("model_response", response=final)
+        if final["agent_state"] == "awaiting_authorization":
+            # Only a proposal the harness can execute exactly is sent to the insurer.
+            problem = await proposal_problem(domain, agent, policy_id, final["proposal"])
+            if problem:
+                log.event("error", error_type="InvalidProposal", reason=problem)
+                messages.append({"role": "user", "content": "The harness cannot send this proposal to the "
+                                 f"insurer: {problem} Return a corrected response."})
+                continue
         return final
     raise RuntimeError("Baseline turn budget exhausted. Stop and hand over; do not repeat successful writes.")
+
+
+async def proposal_problem(domain, agent, policy_id, proposal):
+    """Why an approval of this proposal could not be executed exactly as saved, or None."""
+    operation, arguments = proposal.get("operation"), proposal.get("arguments")
+    if operation not in AUTHORIZABLE[agent] or not isinstance(arguments, dict):
+        return ("The proposal needs operation (one of " + ", ".join(AUTHORIZABLE[agent])
+                + ") and arguments (its exact tool input, without run_id).")
+    if arguments.get("policy_id") != policy_id or "run_id" in arguments:
+        return f"The arguments must be for policy {policy_id} and must not contain run_id."
+    invalid = next(validator("tools.schema.json", TOOLS[operation][0] + "Input")
+                   .iter_errors({**arguments, "run_id": domain.run_id}), None)
+    if invalid:
+        return f"The arguments are not a valid {operation} input: {invalid.message}."
+    blocked = await blocked_write(domain, operation, arguments)
+    if blocked is None:
+        return f"{operation} with these arguments needs no insurer authorization: run it yourself."
+    if blocked[0] != "AuthorizationRequired":
+        return f"{blocked[1]} {INSTEAD[blocked[0]]}"
+    return None
 
 
 async def blocked_write(domain, name, arguments):
