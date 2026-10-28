@@ -1,0 +1,1114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:eurapco:hackathon:provided-tool-contracts:1",
+  "description": "Select a named definition to validate a tool payload. The unselected root rejects all payloads.",
+  "not": {},
+  "$defs": {
+    "Identifier": {
+      "type": "string",
+      "minLength": 1
+    },
+    "Money": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(0|[1-9][0-9]*)\\.[0-9]{2}$"
+    },
+    "Date": {
+      "type": "string",
+      "minLength": 1,
+      "format": "date",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "Currency": {
+      "const": "EUR"
+    },
+    "PolicyStatus": {
+      "type": "string",
+      "enum": [
+        "active",
+        "inactive",
+        "terminated"
+      ]
+    },
+    "Service": {
+      "type": "string",
+      "enum": [
+        "specialist_consultation",
+        "diagnostic_test",
+        "physiotherapy",
+        "dental_care",
+        "cosmetic_treatment",
+        "medicines"
+      ]
+    },
+    "ClaimStatus": {
+      "type": "string",
+      "enum": [
+        "registered",
+        "pending_authorization",
+        "paid",
+        "rejected",
+        "not_covered",
+        "incomplete",
+        "invalid",
+        "payment_failed"
+      ]
+    },
+    "RecordableOutcome": {
+      "type": "string",
+      "enum": [
+        "pending_authorization",
+        "paid",
+        "rejected",
+        "not_covered",
+        "incomplete",
+        "invalid",
+        "payment_failed"
+      ]
+    },
+    "Address": {
+      "type": "object",
+      "properties": {
+        "street": {
+          "type": "string",
+          "minLength": 1
+        },
+        "city": {
+          "type": "string",
+          "minLength": 1
+        },
+        "postal_code": {
+          "type": "string",
+          "minLength": 1
+        },
+        "country": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "street",
+        "city",
+        "postal_code",
+        "country"
+      ],
+      "additionalProperties": false
+    },
+    "Contacts": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "minLength": 1,
+          "format": "email"
+        },
+        "phone": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^\\+[1-9][0-9]{7,14}$"
+        },
+        "address": {
+          "$ref": "#/$defs/Address"
+        }
+      },
+      "required": [
+        "email",
+        "phone",
+        "address"
+      ],
+      "additionalProperties": false
+    },
+    "Person": {
+      "type": "object",
+      "properties": {
+        "person_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "person_id",
+        "name"
+      ],
+      "additionalProperties": false
+    },
+    "FinancialTerms": {
+      "type": "object",
+      "properties": {
+        "annual_limit": {
+          "type": "string",
+          "enum": [
+            "3000.00",
+            "5000.00",
+            "10000.00"
+          ]
+        },
+        "deductible": {
+          "type": "string",
+          "enum": [
+            "50.00",
+            "100.00",
+            "200.00",
+            "500.00"
+          ]
+        },
+        "paid_consumption": {
+          "$ref": "#/$defs/Money"
+        },
+        "remaining_limit": {
+          "$ref": "#/$defs/Money"
+        }
+      },
+      "required": [
+        "annual_limit",
+        "deductible",
+        "paid_consumption",
+        "remaining_limit"
+      ],
+      "additionalProperties": false
+    },
+    "Policy": {
+      "type": "object",
+      "properties": {
+        "policy_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "holder": {
+          "$ref": "#/$defs/Person"
+        },
+        "insured_people": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Person"
+          },
+          "minItems": 1
+        },
+        "status": {
+          "$ref": "#/$defs/PolicyStatus"
+        },
+        "coverage_period": {
+          "type": "object",
+          "properties": {
+            "start": {
+              "$ref": "#/$defs/Date"
+            },
+            "end": {
+              "$ref": "#/$defs/Date"
+            }
+          },
+          "required": [
+            "start",
+            "end"
+          ],
+          "additionalProperties": false
+        },
+        "policy_year": {
+          "type": "integer",
+          "minimum": 2000,
+          "maximum": 2100
+        },
+        "currency": {
+          "$ref": "#/$defs/Currency"
+        },
+        "contacts": {
+          "$ref": "#/$defs/Contacts"
+        },
+        "financial_terms": {
+          "$ref": "#/$defs/FinancialTerms"
+        },
+        "covered_services": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Service"
+          },
+          "uniqueItems": true
+        },
+        "excluded_services": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Service"
+          },
+          "uniqueItems": true
+        },
+        "allowed_values": {
+          "type": "object",
+          "properties": {
+            "annual_limits": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "3000.00",
+                  "5000.00",
+                  "10000.00"
+                ]
+              },
+              "uniqueItems": true
+            },
+            "deductibles": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "50.00",
+                  "100.00",
+                  "200.00",
+                  "500.00"
+                ]
+              },
+              "uniqueItems": true
+            }
+          },
+          "required": [
+            "annual_limits",
+            "deductibles"
+          ],
+          "additionalProperties": false
+        },
+        "authorization_thresholds": {
+          "type": "object",
+          "properties": {
+            "annual_limit": {
+              "const": "5000.00"
+            },
+            "deductible": {
+              "const": "200.00"
+            },
+            "reimbursement": {
+              "const": "1500.00"
+            }
+          },
+          "required": [
+            "annual_limit",
+            "deductible",
+            "reimbursement"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "policy_id",
+        "holder",
+        "insured_people",
+        "status",
+        "coverage_period",
+        "policy_year",
+        "currency",
+        "contacts",
+        "financial_terms",
+        "covered_services",
+        "excluded_services",
+        "allowed_values",
+        "authorization_thresholds"
+      ],
+      "additionalProperties": false
+    },
+    "InvoiceFacts": {
+      "type": "object",
+      "properties": {
+        "provider_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "invoice_number": {
+          "type": "string",
+          "minLength": 1
+        },
+        "invoice_date": {
+          "$ref": "#/$defs/Date"
+        },
+        "service_date": {
+          "$ref": "#/$defs/Date"
+        },
+        "expense": {
+          "$ref": "#/$defs/Money"
+        },
+        "currency": {
+          "$ref": "#/$defs/Currency"
+        }
+      },
+      "required": [
+        "provider_id",
+        "invoice_number",
+        "invoice_date",
+        "service_date",
+        "expense",
+        "currency"
+      ],
+      "additionalProperties": false
+    },
+    "PaymentRecord": {
+      "type": "object",
+      "properties": {
+        "payment_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "claim_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "policy_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "amount": {
+          "$ref": "#/$defs/Money"
+        },
+        "currency": {
+          "$ref": "#/$defs/Currency"
+        }
+      },
+      "required": [
+        "payment_id",
+        "claim_id",
+        "policy_id",
+        "amount",
+        "currency"
+      ],
+      "additionalProperties": false
+    },
+    "Claim": {
+      "type": "object",
+      "properties": {
+        "claim_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "policy_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "patient_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "service_category": {
+          "$ref": "#/$defs/Service"
+        },
+        "invoice": {
+          "$ref": "#/$defs/InvoiceFacts"
+        },
+        "status": {
+          "$ref": "#/$defs/ClaimStatus"
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "payment": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/PaymentRecord"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "claim_id",
+        "policy_id",
+        "patient_name",
+        "service_category",
+        "invoice",
+        "status",
+        "reason",
+        "evidence_refs",
+        "payment"
+      ],
+      "additionalProperties": false
+    },
+    "ToolError": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "enum": [
+            "INVALID_ARGUMENT",
+            "NOT_FOUND",
+            "REFERENCE_MISMATCH",
+            "INVALID_STATE",
+            "OPERATION_FAILED"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1
+        },
+        "field": {
+          "type": "string",
+          "minLength": 1
+        },
+        "allowed_values": {
+          "type": "array",
+          "items": {
+            "type": [
+              "string",
+              "number",
+              "boolean",
+              "null"
+            ]
+          }
+        },
+        "retryable": {
+          "type": "boolean"
+        },
+        "effect_applied": {
+          "const": false
+        }
+      },
+      "required": [
+        "code",
+        "message",
+        "retryable",
+        "effect_applied"
+      ],
+      "additionalProperties": false
+    },
+    "ToolErrorResult": {
+      "type": "object",
+      "properties": {
+        "ok": {
+          "const": false
+        },
+        "error": {
+          "$ref": "#/$defs/ToolError"
+        }
+      },
+      "required": [
+        "ok",
+        "error"
+      ],
+      "additionalProperties": false
+    },
+    "GetPolicyInput": {
+      "type": "object",
+      "properties": {
+        "run_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "policy_id": {
+          "$ref": "#/$defs/Identifier"
+        }
+      },
+      "required": [
+        "run_id",
+        "policy_id"
+      ],
+      "additionalProperties": false
+    },
+    "UpdateContactDetailsInput": {
+      "type": "object",
+      "properties": {
+        "run_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "policy_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "changes": {
+          "type": "object",
+          "properties": {
+            "email": {
+              "type": "string",
+              "minLength": 1,
+              "format": "email"
+            },
+            "phone": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^\\+[1-9][0-9]{7,14}$"
+            },
+            "address": {
+              "$ref": "#/$defs/Address"
+            }
+          },
+          "required": [],
+          "additionalProperties": false,
+          "minProperties": 1
+        }
+      },
+      "required": [
+        "run_id",
+        "policy_id",
+        "changes"
+      ],
+      "additionalProperties": false
+    },
+    "ContactUpdateData": {
+      "type": "object",
+      "properties": {
+        "policy_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "changed": {
+          "type": "boolean"
+        },
+        "changed_fields": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "email",
+              "phone",
+              "address"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "before": {
+          "$ref": "#/$defs/Contacts"
+        },
+        "after": {
+          "$ref": "#/$defs/Contacts"
+        }
+      },
+      "required": [
+        "policy_id",
+        "changed",
+        "changed_fields",
+        "before",
+        "after"
+      ],
+      "additionalProperties": false
+    },
+    "UpdateCoverageInput": {
+      "type": "object",
+      "properties": {
+        "run_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "policy_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "changes": {
+          "type": "object",
+          "properties": {
+            "annual_limit": {
+              "type": "string",
+              "enum": [
+                "3000.00",
+                "5000.00",
+                "10000.00"
+              ]
+            },
+            "deductible": {
+              "type": "string",
+              "enum": [
+                "50.00",
+                "100.00",
+                "200.00",
+                "500.00"
+              ]
+            }
+          },
+          "required": [],
+          "additionalProperties": false,
+          "minProperties": 1
+        }
+      },
+      "required": [
+        "run_id",
+        "policy_id",
+        "changes"
+      ],
+      "additionalProperties": false
+    },
+    "CoverageUpdateData": {
+      "type": "object",
+      "properties": {
+        "policy_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "changed": {
+          "type": "boolean"
+        },
+        "changed_fields": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "annual_limit",
+              "deductible"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "before": {
+          "$ref": "#/$defs/FinancialTerms"
+        },
+        "after": {
+          "$ref": "#/$defs/FinancialTerms"
+        }
+      },
+      "required": [
+        "policy_id",
+        "changed",
+        "changed_fields",
+        "before",
+        "after"
+      ],
+      "additionalProperties": false
+    },
+    "TerminatePolicyInput": {
+      "type": "object",
+      "properties": {
+        "run_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "policy_id": {
+          "$ref": "#/$defs/Identifier"
+        }
+      },
+      "required": [
+        "run_id",
+        "policy_id"
+      ],
+      "additionalProperties": false
+    },
+    "TerminationData": {
+      "type": "object",
+      "properties": {
+        "policy_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "changed": {
+          "type": "boolean"
+        },
+        "before_status": {
+          "$ref": "#/$defs/PolicyStatus"
+        },
+        "after_status": {
+          "$ref": "#/$defs/PolicyStatus"
+        }
+      },
+      "required": [
+        "policy_id",
+        "changed",
+        "before_status",
+        "after_status"
+      ],
+      "additionalProperties": false
+    },
+    "GetClaimInput": {
+      "type": "object",
+      "properties": {
+        "run_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "policy_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "claim_id": {
+          "$ref": "#/$defs/Identifier"
+        }
+      },
+      "required": [
+        "run_id",
+        "policy_id",
+        "claim_id"
+      ],
+      "additionalProperties": false
+    },
+    "ListClaimsInput": {
+      "type": "object",
+      "properties": {
+        "run_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "policy_id": {
+          "$ref": "#/$defs/Identifier"
+        }
+      },
+      "required": [
+        "run_id",
+        "policy_id"
+      ],
+      "additionalProperties": false
+    },
+    "ClaimListData": {
+      "type": "object",
+      "properties": {
+        "policy_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "claims": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Claim"
+          }
+        }
+      },
+      "required": [
+        "policy_id",
+        "claims"
+      ],
+      "additionalProperties": false
+    },
+    "CreateClaimInput": {
+      "type": "object",
+      "properties": {
+        "run_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "policy_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "patient_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "service_category": {
+          "$ref": "#/$defs/Service"
+        },
+        "invoice": {
+          "$ref": "#/$defs/InvoiceFacts"
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "run_id",
+        "policy_id",
+        "patient_name",
+        "service_category",
+        "invoice",
+        "evidence_refs"
+      ],
+      "additionalProperties": false
+    },
+    "PayClaimInput": {
+      "type": "object",
+      "properties": {
+        "run_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "policy_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "claim_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "amount": {
+          "$ref": "#/$defs/Money"
+        }
+      },
+      "required": [
+        "run_id",
+        "policy_id",
+        "claim_id",
+        "amount"
+      ],
+      "additionalProperties": false
+    },
+    "PaymentData": {
+      "type": "object",
+      "properties": {
+        "payment_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "claim_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "policy_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "amount": {
+          "$ref": "#/$defs/Money"
+        },
+        "currency": {
+          "$ref": "#/$defs/Currency"
+        },
+        "created": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "payment_id",
+        "claim_id",
+        "policy_id",
+        "amount",
+        "currency",
+        "created"
+      ],
+      "additionalProperties": false
+    },
+    "RecordClaimOutcomeInput": {
+      "type": "object",
+      "properties": {
+        "run_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "policy_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "claim_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "outcome": {
+          "$ref": "#/$defs/RecordableOutcome"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "run_id",
+        "policy_id",
+        "claim_id",
+        "outcome",
+        "reason"
+      ],
+      "additionalProperties": false
+    },
+    "GetPolicySuccess": {
+      "type": "object",
+      "properties": {
+        "ok": {
+          "const": true
+        },
+        "data": {
+          "$ref": "#/$defs/Policy"
+        }
+      },
+      "required": [
+        "ok",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "GetPolicyResult": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/GetPolicySuccess"
+        },
+        {
+          "$ref": "#/$defs/ToolErrorResult"
+        }
+      ]
+    },
+    "UpdateContactDetailsSuccess": {
+      "type": "object",
+      "properties": {
+        "ok": {
+          "const": true
+        },
+        "data": {
+          "$ref": "#/$defs/ContactUpdateData"
+        }
+      },
+      "required": [
+        "ok",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "UpdateContactDetailsResult": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/UpdateContactDetailsSuccess"
+        },
+        {
+          "$ref": "#/$defs/ToolErrorResult"
+        }
+      ]
+    },
+    "UpdateCoverageSuccess": {
+      "type": "object",
+      "properties": {
+        "ok": {
+          "const": true
+        },
+        "data": {
+          "$ref": "#/$defs/CoverageUpdateData"
+        }
+      },
+      "required": [
+        "ok",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "UpdateCoverageResult": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/UpdateCoverageSuccess"
+        },
+        {
+          "$ref": "#/$defs/ToolErrorResult"
+        }
+      ]
+    },
+    "TerminatePolicySuccess": {
+      "type": "object",
+      "properties": {
+        "ok": {
+          "const": true
+        },
+        "data": {
+          "$ref": "#/$defs/TerminationData"
+        }
+      },
+      "required": [
+        "ok",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "TerminatePolicyResult": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/TerminatePolicySuccess"
+        },
+        {
+          "$ref": "#/$defs/ToolErrorResult"
+        }
+      ]
+    },
+    "GetClaimSuccess": {
+      "type": "object",
+      "properties": {
+        "ok": {
+          "const": true
+        },
+        "data": {
+          "$ref": "#/$defs/Claim"
+        }
+      },
+      "required": [
+        "ok",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "GetClaimResult": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/GetClaimSuccess"
+        },
+        {
+          "$ref": "#/$defs/ToolErrorResult"
+        }
+      ]
+    },
+    "ListClaimsSuccess": {
+      "type": "object",
+      "properties": {
+        "ok": {
+          "const": true
+        },
+        "data": {
+          "$ref": "#/$defs/ClaimListData"
+        }
+      },
+      "required": [
+        "ok",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "ListClaimsResult": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/ListClaimsSuccess"
+        },
+        {
+          "$ref": "#/$defs/ToolErrorResult"
+        }
+      ]
+    },
+    "CreateClaimSuccess": {
+      "type": "object",
+      "properties": {
+        "ok": {
+          "const": true
+        },
+        "data": {
+          "$ref": "#/$defs/Claim"
+        }
+      },
+      "required": [
+        "ok",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "CreateClaimResult": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/CreateClaimSuccess"
+        },
+        {
+          "$ref": "#/$defs/ToolErrorResult"
+        }
+      ]
+    },
+    "PayClaimSuccess": {
+      "type": "object",
+      "properties": {
+        "ok": {
+          "const": true
+        },
+        "data": {
+          "$ref": "#/$defs/PaymentData"
+        }
+      },
+      "required": [
+        "ok",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "PayClaimResult": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/PayClaimSuccess"
+        },
+        {
+          "$ref": "#/$defs/ToolErrorResult"
+        }
+      ]
+    },
+    "RecordClaimOutcomeSuccess": {
+      "type": "object",
+      "properties": {
+        "ok": {
+          "const": true
+        },
+        "data": {
+          "$ref": "#/$defs/Claim"
+        }
+      },
+      "required": [
+        "ok",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "RecordClaimOutcomeResult": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/RecordClaimOutcomeSuccess"
+        },
+        {
+          "$ref": "#/$defs/ToolErrorResult"
+        }
+      ]
+    }
+  }
+}

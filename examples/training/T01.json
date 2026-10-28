@@ -1,0 +1,9 @@
+{
+  "event_type": "request",
+  "event_id": "EV-T01-01",
+  "ticket_id": "T01",
+  "policy_id": "POL-001",
+  "author_name": "Taylor Example",
+  "timestamp": "2026-10-22T10:00:00+02:00",
+  "text": "Is physiotherapy covered by my policy, and what are my deductible and remaining annual limit?"
+}

@@ -1,0 +1,11 @@
+{
+  "event_type": "request",
+  "event_id": "EV-T10-01",
+  "ticket_id": "T10",
+  "policy_id": "POL-001",
+  "author_name": "Taylor Example",
+  "timestamp": "2026-12-31T10:00:00+01:00",
+  "text": "I request reimbursement for physiotherapy performed on the last day of my coverage. My invoice and prescription are below.",
+  "invoice_text": "Provider ID: PROVIDER-002\nProvider: Example Medical Centre\nInvoice number: INV-2026-010\nInvoice date: 2026-12-31\nService date: 2026-12-31\nPatient: Taylor Example\nService: physiotherapy\nAmount: EUR 1925.00\nPayment status: PAID IN FULL",
+  "prescription_text": "Patient: Taylor Example. Dr Avery prescribes physiotherapy sessions for this patient."
+}

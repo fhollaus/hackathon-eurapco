@@ -1,0 +1,9 @@
+{
+  "event_type": "request",
+  "event_id": "EV-T14-01",
+  "ticket_id": "T14",
+  "policy_id": "POL-001",
+  "author_name": "Taylor Example",
+  "timestamp": "2026-10-22T10:00:00+02:00",
+  "text": "Can I have reimbursement for EUR 220 of dental cleaning? I have not supplied any documents."
+}

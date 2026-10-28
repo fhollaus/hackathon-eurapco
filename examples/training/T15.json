@@ -1,0 +1,10 @@
+{
+  "event_type": "request",
+  "event_id": "EV-T15-01",
+  "ticket_id": "T15",
+  "policy_id": "POL-003",
+  "author_name": "Casey Demo",
+  "timestamp": "2026-10-22T10:00:00+02:00",
+  "text": "Can you pay me back for this specialist visit? Here is the paid bill.",
+  "invoice_text": "Provider ID: PROVIDER-002\nProvider: Example Medical Centre\nInvoice number: INV-2026-015\nInvoice date: 2026-10-20\nService date: 2026-10-20\nPatient: Casey Demo\nService: specialist consultation\nAmount: EUR 180.00\nPayment status: PAID IN FULL"
+}

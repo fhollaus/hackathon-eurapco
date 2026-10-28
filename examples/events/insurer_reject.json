@@ -1,0 +1,8 @@
+{
+  "event_type": "insurer_decision",
+  "event_id": "EV-T06-02",
+  "ticket_id": "T06",
+  "timestamp": "2026-10-22T10:02:00+02:00",
+  "decision": "reject",
+  "reason": "The proposed increase is declined for this training execution."
+}

@@ -1,0 +1,10 @@
+{
+  "event_type": "request",
+  "event_id": "EV-T02-01",
+  "ticket_id": "T02",
+  "policy_id": "POL-001",
+  "author_name": "Taylor Example",
+  "timestamp": "2026-10-22T10:00:00+02:00",
+  "text": "What is the status of my reimbursement claim CL-H001?",
+  "claim_id": "CL-H001"
+}

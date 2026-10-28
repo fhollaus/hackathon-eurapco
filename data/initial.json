@@ -1,0 +1,262 @@
+{
+  "policies": {
+    "POL-001": {
+      "policy_id": "POL-001",
+      "holder": {
+        "person_id": "H-POL-001",
+        "name": "Taylor Example"
+      },
+      "insured_people": [
+        {
+          "person_id": "H-POL-001",
+          "name": "Taylor Example"
+        },
+        {
+          "person_id": "P-POL-001",
+          "name": "Jamie Example"
+        }
+      ],
+      "status": "active",
+      "coverage_period": {
+        "start": "2026-01-01",
+        "end": "2026-12-31"
+      },
+      "policy_year": 2026,
+      "currency": "EUR",
+      "contacts": {
+        "email": "taylor@example.com",
+        "phone": "+393331234567",
+        "address": {
+          "street": "12 Example Street",
+          "city": "Milan",
+          "postal_code": "20100",
+          "country": "Italy"
+        }
+      },
+      "financial_terms": {
+        "annual_limit": "3000.00",
+        "deductible": "50.00",
+        "paid_consumption": "104.00",
+        "remaining_limit": "2896.00"
+      },
+      "covered_services": [
+        "specialist_consultation",
+        "diagnostic_test",
+        "physiotherapy"
+      ],
+      "excluded_services": [
+        "dental_care",
+        "cosmetic_treatment",
+        "medicines"
+      ],
+      "allowed_values": {
+        "annual_limits": [
+          "3000.00",
+          "5000.00",
+          "10000.00"
+        ],
+        "deductibles": [
+          "50.00",
+          "100.00",
+          "200.00",
+          "500.00"
+        ]
+      },
+      "authorization_thresholds": {
+        "annual_limit": "5000.00",
+        "deductible": "200.00",
+        "reimbursement": "1500.00"
+      }
+    },
+    "POL-002": {
+      "policy_id": "POL-002",
+      "holder": {
+        "person_id": "H-POL-002",
+        "name": "Morgan Sample"
+      },
+      "insured_people": [
+        {
+          "person_id": "H-POL-002",
+          "name": "Morgan Sample"
+        },
+        {
+          "person_id": "P-POL-002",
+          "name": "Jamie Sample"
+        }
+      ],
+      "status": "active",
+      "coverage_period": {
+        "start": "2026-01-01",
+        "end": "2026-12-31"
+      },
+      "policy_year": 2026,
+      "currency": "EUR",
+      "contacts": {
+        "email": "morgan@example.com",
+        "phone": "+393331234567",
+        "address": {
+          "street": "12 Example Street",
+          "city": "Milan",
+          "postal_code": "20100",
+          "country": "Italy"
+        }
+      },
+      "financial_terms": {
+        "annual_limit": "3000.00",
+        "deductible": "50.00",
+        "paid_consumption": "2100.00",
+        "remaining_limit": "900.00"
+      },
+      "covered_services": [
+        "specialist_consultation",
+        "diagnostic_test",
+        "physiotherapy"
+      ],
+      "excluded_services": [
+        "dental_care",
+        "cosmetic_treatment",
+        "medicines"
+      ],
+      "allowed_values": {
+        "annual_limits": [
+          "3000.00",
+          "5000.00",
+          "10000.00"
+        ],
+        "deductibles": [
+          "50.00",
+          "100.00",
+          "200.00",
+          "500.00"
+        ]
+      },
+      "authorization_thresholds": {
+        "annual_limit": "5000.00",
+        "deductible": "200.00",
+        "reimbursement": "1500.00"
+      }
+    },
+    "POL-003": {
+      "policy_id": "POL-003",
+      "holder": {
+        "person_id": "H-POL-003",
+        "name": "Casey Demo"
+      },
+      "insured_people": [
+        {
+          "person_id": "H-POL-003",
+          "name": "Casey Demo"
+        },
+        {
+          "person_id": "P-POL-003",
+          "name": "Jamie Demo"
+        }
+      ],
+      "status": "inactive",
+      "coverage_period": {
+        "start": "2026-01-01",
+        "end": "2026-12-31"
+      },
+      "policy_year": 2026,
+      "currency": "EUR",
+      "contacts": {
+        "email": "casey@example.com",
+        "phone": "+393331234567",
+        "address": {
+          "street": "12 Example Street",
+          "city": "Milan",
+          "postal_code": "20100",
+          "country": "Italy"
+        }
+      },
+      "financial_terms": {
+        "annual_limit": "3000.00",
+        "deductible": "50.00",
+        "paid_consumption": "0.00",
+        "remaining_limit": "3000.00"
+      },
+      "covered_services": [
+        "specialist_consultation",
+        "diagnostic_test",
+        "physiotherapy"
+      ],
+      "excluded_services": [
+        "dental_care",
+        "cosmetic_treatment",
+        "medicines"
+      ],
+      "allowed_values": {
+        "annual_limits": [
+          "3000.00",
+          "5000.00",
+          "10000.00"
+        ],
+        "deductibles": [
+          "50.00",
+          "100.00",
+          "200.00",
+          "500.00"
+        ]
+      },
+      "authorization_thresholds": {
+        "annual_limit": "5000.00",
+        "deductible": "200.00",
+        "reimbursement": "1500.00"
+      }
+    }
+  },
+  "claims": {
+    "CL-H001": {
+      "claim_id": "CL-H001",
+      "policy_id": "POL-001",
+      "patient_name": "Taylor Example",
+      "service_category": "specialist_consultation",
+      "invoice": {
+        "provider_id": "PROVIDER-001",
+        "invoice_number": "INV-2026-001",
+        "invoice_date": "2026-10-02",
+        "service_date": "2026-10-01",
+        "expense": "180.00",
+        "currency": "EUR"
+      },
+      "status": "paid",
+      "reason": "Historical simulated reimbursement paid.",
+      "evidence_refs": [
+        "history/CL-H001/invoice_text"
+      ],
+      "payment": {
+        "payment_id": "PAY-H001",
+        "claim_id": "CL-H001",
+        "policy_id": "POL-001",
+        "amount": "104.00",
+        "currency": "EUR"
+      }
+    },
+    "CL-H002": {
+      "claim_id": "CL-H002",
+      "policy_id": "POL-002",
+      "patient_name": "Morgan Sample",
+      "service_category": "specialist_consultation",
+      "invoice": {
+        "provider_id": "PROVIDER-003",
+        "invoice_number": "INV-2026-002",
+        "invoice_date": "2026-09-02",
+        "service_date": "2026-09-01",
+        "expense": "2675.00",
+        "currency": "EUR"
+      },
+      "status": "paid",
+      "reason": "Historical reimbursement approved and paid in the supplied initial data.",
+      "evidence_refs": [
+        "history/CL-H002/invoice_text"
+      ],
+      "payment": {
+        "payment_id": "PAY-H002",
+        "claim_id": "CL-H002",
+        "policy_id": "POL-002",
+        "amount": "2100.00",
+        "currency": "EUR"
+      }
+    }
+  }
+}

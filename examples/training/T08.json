@@ -1,0 +1,10 @@
+{
+  "event_type": "request",
+  "event_id": "EV-T08-01",
+  "ticket_id": "T08",
+  "policy_id": "POL-001",
+  "author_name": "Taylor Example",
+  "timestamp": "2026-10-22T10:00:00+02:00",
+  "text": "I request reimbursement for my specialist consultation. The paid invoice text follows.",
+  "invoice_text": "Provider ID: PROVIDER-002\nProvider: Example Medical Centre\nInvoice number: INV-2026-008\nInvoice date: 2026-10-20\nService date: 2026-10-20\nPatient: Taylor Example\nService: specialist consultation\nAmount: EUR 180.00\nPayment status: PAID IN FULL"
+}

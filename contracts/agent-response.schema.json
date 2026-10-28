@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "request_category": {
+      "enum": [
+        "policy_enquiry",
+        "contact_update",
+        "coverage_change",
+        "policy_termination",
+        "out_of_scope_iban",
+        "out_of_scope_renewal",
+        "out_of_scope_claims",
+        "out_of_scope_other",
+        "unclear",
+        "reimbursement_request",
+        "claim_enquiry",
+        "out_of_scope_claim_integration",
+        "out_of_scope_administration"
+      ]
+    },
+    "agent_state": {
+      "enum": [
+        "processing",
+        "awaiting_clarification",
+        "awaiting_authorization",
+        "completed",
+        "closed_without_execution",
+        "failed"
+      ]
+    },
+    "request_outcome": {
+      "enum": [
+        "in_progress",
+        "information_requested",
+        "authorization_requested",
+        "answered",
+        "updated",
+        "terminated",
+        "paid",
+        "no_change",
+        "duplicate",
+        "not_covered",
+        "inactive_policy",
+        "outside_coverage_period",
+        "not_insured",
+        "out_of_scope",
+        "unclear",
+        "insufficient_information",
+        "insurer_rejected",
+        "zero_reimbursement",
+        "invalid_input",
+        "technical_failure",
+        "handover_required"
+      ]
+    },
+    "reason": {
+      "type": "string",
+      "minLength": 1
+    },
+    "message": {
+      "type": "string",
+      "minLength": 1
+    },
+    "question": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "proposal": {
+      "type": [
+        "object",
+        "null"
+      ]
+    }
+  },
+  "required": [
+    "request_category",
+    "agent_state",
+    "request_outcome",
+    "reason",
+    "message",
+    "question",
+    "proposal"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "agent_state": {
+            "const": "awaiting_clarification"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "question": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "agent_state": {
+            "const": "awaiting_authorization"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "proposal": {
+            "type": "object",
+            "minProperties": 1
+          }
+        }
+      }
+    }
+  ]
+}

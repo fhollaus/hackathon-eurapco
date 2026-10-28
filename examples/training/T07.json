@@ -1,0 +1,9 @@
+{
+  "event_type": "request",
+  "event_id": "EV-T07-01",
+  "ticket_id": "T07",
+  "policy_id": "POL-001",
+  "author_name": "Taylor Example",
+  "timestamp": "2026-10-22T10:00:00+02:00",
+  "text": "Please terminate my medical policy. This is my instruction to terminate, not a request for information."
+}

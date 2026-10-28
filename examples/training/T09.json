@@ -1,0 +1,11 @@
+{
+  "event_type": "request",
+  "event_id": "EV-T09-01",
+  "ticket_id": "T09",
+  "policy_id": "POL-001",
+  "author_name": "Taylor Example",
+  "timestamp": "2026-10-22T10:00:00+02:00",
+  "text": "I request reimbursement for a diagnostic blood test. Here is the paid invoice; I have not supplied the prescription.",
+  "invoice_text": "Provider ID: PROVIDER-002\nProvider: Example Medical Centre\nInvoice number: INV-2026-009\nInvoice date: 2026-10-20\nService date: 2026-10-20\nPatient: Taylor Example\nService: diagnostic blood test\nAmount: EUR 300.00\nPayment status: PAID IN FULL",
+  "prescription_text": null
+}

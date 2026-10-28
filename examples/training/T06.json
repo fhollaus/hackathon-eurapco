@@ -1,0 +1,9 @@
+{
+  "event_type": "request",
+  "event_id": "EV-T06-01",
+  "ticket_id": "T06",
+  "policy_id": "POL-001",
+  "author_name": "Taylor Example",
+  "timestamp": "2026-10-22T10:00:00+02:00",
+  "text": "Please increase my annual reimbursement limit to EUR 10000 and my per-claim deductible to EUR 500, together."
+}

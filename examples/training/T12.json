@@ -1,0 +1,11 @@
+{
+  "event_type": "request",
+  "event_id": "EV-T12-01",
+  "ticket_id": "T12",
+  "policy_id": "POL-002",
+  "author_name": "Morgan Sample",
+  "timestamp": "2026-10-22T10:00:00+02:00",
+  "text": "Please reimburse my diagnostic MRI using the remaining cover on my policy. The paid invoice and prescription are included.",
+  "invoice_text": "Provider ID: PROVIDER-002\nProvider: Example Medical Centre\nInvoice number: INV-2026-012\nInvoice date: 2026-10-20\nService date: 2026-10-20\nPatient: Morgan Sample\nService: diagnostic MRI\nAmount: EUR 2000.00\nPayment status: PAID IN FULL",
+  "prescription_text": "Patient: Morgan Sample. Dr Avery prescribes a diagnostic MRI for this patient."
+}

@@ -1,0 +1,54 @@
+{
+  "agent_states": [
+    "processing",
+    "awaiting_clarification",
+    "awaiting_authorization",
+    "completed",
+    "closed_without_execution",
+    "failed"
+  ],
+  "request_outcomes": [
+    "in_progress",
+    "information_requested",
+    "authorization_requested",
+    "answered",
+    "updated",
+    "terminated",
+    "paid",
+    "no_change",
+    "duplicate",
+    "not_covered",
+    "inactive_policy",
+    "outside_coverage_period",
+    "not_insured",
+    "out_of_scope",
+    "unclear",
+    "insufficient_information",
+    "insurer_rejected",
+    "zero_reimbursement",
+    "invalid_input",
+    "technical_failure",
+    "handover_required"
+  ],
+  "request_categories": {
+    "administration": [
+      "policy_enquiry",
+      "contact_update",
+      "coverage_change",
+      "policy_termination",
+      "out_of_scope_iban",
+      "out_of_scope_renewal",
+      "out_of_scope_claims",
+      "out_of_scope_other",
+      "unclear"
+    ],
+    "claims": [
+      "reimbursement_request",
+      "claim_enquiry",
+      "out_of_scope_claim_integration",
+      "out_of_scope_administration",
+      "out_of_scope_other",
+      "unclear"
+    ]
+  }
+}

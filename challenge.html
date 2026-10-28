@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Eurapco · Harness challenge guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ==========================================================================
+   Datapizza Design System V2, versione web per dashboard e pagine HTML
+   Token verificati sul deck sorgente Design_System.pptx.
+   Adattamento web: scala tipografica x0,55 rispetto ai 1920 px di Figma,
+   padding dei blocchi 24 px; raggi (16/24) e bordo (2 px) restano quelli del sistema.
+   ========================================================================== */
+:root {
+  /* Palette */
+  --dp-navy: #111F2D;
+  --dp-blue: #2467FF;
+  --dp-blue-soft: #7CA4FF;
+  --dp-blue-light: #BDD1FF;
+  --dp-blue-bg: #EDF3FF;
+  --dp-red: #D7342B;
+  --dp-red-bg: #FBEAE9;
+  --dp-white: #FFFFFF;
+  --dp-text-2: #526170;
+  --dp-line: #D5DDE5;
+  --dp-surface: #F2F4F7;
+
+  /* Forma */
+  --dp-r: 16px;          /* box standard */
+  --dp-r-perim: 24px;    /* perimetri */
+  --dp-r-ctl: 12px;      /* controlli piccoli (bottoni, segmenti): unico valore derivato */
+  --dp-bw: 2px;
+  --dp-shadow: 0 2px 10px rgba(17, 31, 45, .08);
+  --dp-pad: 24px;
+
+  /* Font */
+  --dp-sans: 'Poppins', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --dp-mono: 'Roboto Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+
+  /* Scala tipografica fissa: non introdurre valori intermedi */
+  --dp-fs-hero: 48px;    /* numeri principali, copertina */
+  --dp-fs-title: 32px;   /* titolo di pagina */
+  --dp-fs-intro: 22px;   /* testo introduttivo */
+  --dp-fs-block: 20px;   /* titoli di blocco */
+  --dp-fs-body: 16px;    /* corpo e sottotitolo */
+  --dp-fs-detail: 14px;  /* dettagli nei blocchi e nei diagrammi */
+  --dp-fs-note: 12px;    /* etichette e note */
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+* { margin: 0; padding: 0; }
+html { color-scheme: light; -webkit-text-size-adjust: 100%; }
+body {
+  background: var(--dp-white);
+  color: var(--dp-navy);
+  font-family: var(--dp-sans);
+  font-size: var(--dp-fs-body);
+  line-height: 1.4;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+strong, b { font-weight: 600; }
+
+/* ---------- Pagina e intestazione (come la cornice delle slide) ---------- */
+.dp-page { max-width: 1280px; margin: 0 auto; padding: 28px clamp(20px, 5vw, 64px) 0; }
+.dp-topbar { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 32px; }
+.dp-eyebrow, .dp-label {
+  font-family: var(--dp-mono); font-size: var(--dp-fs-note); line-height: 1.4;
+  letter-spacing: .04em; text-transform: uppercase; color: var(--dp-text-2);
+}
+.dp-label { margin-bottom: 12px; display: block; }
+.dp-brand { display: inline-flex; align-items: center; gap: 8px; color: var(--dp-navy); text-decoration: none; }
+.dp-brand svg { height: 26px; width: auto; display: block; }
+.dp-wordmark { font-weight: 500; font-size: var(--dp-fs-block); letter-spacing: -.01em; line-height: 1; }
+.dp-title { font-size: var(--dp-fs-title); font-weight: 500; line-height: 1.2; letter-spacing: -.01em; }
+.dp-lead { font-size: var(--dp-fs-body); color: var(--dp-text-2); margin-top: 8px; max-width: 72ch; }
+.dp-intro { font-size: var(--dp-fs-intro); line-height: 1.36; }
+.dp-head { margin-bottom: 40px; }
+.dp-footer {
+  margin-top: 64px; padding: 16px 0 28px; border-top: 1px solid var(--dp-line);
+  display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  font-family: var(--dp-mono); font-size: var(--dp-fs-note); letter-spacing: .04em;
+  text-transform: uppercase; color: var(--dp-text-2);
+}
+
+/* ---------- Griglia e ritmo verticale ---------- */
+.dp-grid { display: grid; gap: 24px; }
+.dp-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.dp-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.dp-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.dp-cols-main { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
+.dp-section { margin-top: 48px; }
+.dp-section:first-child { margin-top: 0; }
+.dp-gap-s { gap: 16px; }
+.dp-mt { margin-top: 24px; }
+.dp-h { font-size: var(--dp-fs-block); font-weight: 600; line-height: 1.33; }
+.dp-muted { color: var(--dp-text-2); }
+.dp-blue { color: var(--dp-blue); }
+.dp-red { color: var(--dp-red); }
+.dp-mono { font-family: var(--dp-mono); }
+
+/* ---------- Blocchi: i quattro ruoli ---------- */
+.dp-block {
+  background: var(--dp-white); border: var(--dp-bw) solid var(--dp-line); border-radius: var(--dp-r);
+  padding: var(--dp-pad); box-shadow: var(--dp-shadow); min-width: 0;
+}
+.dp-block h3 { font-size: var(--dp-fs-block); font-weight: 600; line-height: 1.33; margin-bottom: 12px; }
+.dp-block p, .dp-block li { font-size: var(--dp-fs-detail); line-height: 1.385; color: var(--dp-text-2); }
+.dp-block p + p { margin-top: 8px; }
+.dp-block.is-evidence { background: var(--dp-blue-bg); border-color: var(--dp-blue); }
+.dp-block.is-evidence h3 { color: var(--dp-blue); }
+.dp-block.is-central { background: var(--dp-navy); border-color: var(--dp-navy); color: var(--dp-white); }
+.dp-block.is-central p, .dp-block.is-central li { color: var(--dp-line); }
+.dp-block.is-human { background: var(--dp-red-bg); border-color: var(--dp-red); }
+.dp-block.is-human h3 { color: var(--dp-red); }
+.dp-block.is-flat { box-shadow: none; }
+
+/* Richiamo: nota breve, senza ombra */
+.dp-note {
+  background: var(--dp-white); border: var(--dp-bw) solid var(--dp-line); border-radius: var(--dp-r);
+  padding: 14px 20px; font-size: var(--dp-fs-detail); line-height: 1.385;
+}
+.dp-note.is-evidence { background: var(--dp-blue-bg); border-color: var(--dp-blue); color: var(--dp-blue); }
+.dp-note.is-human { background: var(--dp-red-bg); border-color: var(--dp-red); color: var(--dp-red); }
+
+/* Perimetro: raggruppa elementi correlati, nessuna ombra */
+.dp-perimeter {
+  background: var(--dp-surface); border: var(--dp-bw) solid var(--dp-line); border-radius: var(--dp-r-perim);
+  padding: var(--dp-pad); min-width: 0;
+}
+.dp-perimeter > .dp-label { margin-bottom: 16px; }
+
+/* ---------- Numeri: valore principale, confronto, variazione ---------- */
+.dp-kpi {
+  display: flex; flex-direction: column; min-height: 200px;
+  background: var(--dp-white); border: var(--dp-bw) solid var(--dp-line); border-radius: var(--dp-r);
+  padding: var(--dp-pad); box-shadow: var(--dp-shadow); min-width: 0;
+}
+.dp-kpi .dp-label { margin-bottom: 20px; }
+.dp-kpi-value { font-size: var(--dp-fs-hero); font-weight: 500; line-height: 1.1; letter-spacing: -.02em; font-variant-numeric: tabular-nums; height: calc(var(--dp-fs-hero) * 1.1); display: flex; align-items: center; }
+.dp-kpi-unit { font-size: var(--dp-fs-body); margin-top: 6px; margin-bottom: 20px; }
+.dp-kpi-foot {
+  margin-top: auto; padding-top: 14px; border-top: var(--dp-bw) solid var(--dp-line);
+  font-size: var(--dp-fs-note); line-height: 1.4; color: var(--dp-text-2);
+}
+.dp-kpi.is-compare { background: var(--dp-blue-bg); border-color: var(--dp-blue); }
+.dp-kpi.is-compare .dp-kpi-value { font-size: 40px; }
+.dp-kpi.is-delta .dp-kpi-value { color: var(--dp-blue); }
+.dp-kpi-value.is-red { color: var(--dp-red); }
+
+/* Metrica libera: un numero isolato, senza contenitore e senza ombra */
+.dp-metric .dp-kpi-value { color: var(--dp-blue); }
+.dp-metric .dp-kpi-unit { color: var(--dp-text-2); font-size: var(--dp-fs-detail); margin-bottom: 0; }
+
+/* ---------- Stati: pillola con nome sempre esplicito ---------- */
+.dp-pill {
+  display: inline-flex; align-items: center; gap: 8px; padding: 3px 12px; border-radius: 999px;
+  border: var(--dp-bw) solid var(--dp-line); background: var(--dp-white); color: var(--dp-navy);
+  font-size: var(--dp-fs-note); font-weight: 500; line-height: 1.4; white-space: nowrap;
+}
+.dp-pill::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--dp-text-2); flex: none; }
+.dp-pill.is-blue { background: var(--dp-blue-bg); border-color: var(--dp-blue); color: var(--dp-blue); }
+.dp-pill.is-blue::before { background: var(--dp-blue); }
+.dp-pill.is-navy { background: var(--dp-navy); border-color: var(--dp-navy); color: var(--dp-white); }
+.dp-pill.is-navy::before { background: var(--dp-white); }
+.dp-pill.is-red { background: var(--dp-red-bg); border-color: var(--dp-red); color: var(--dp-red); }
+.dp-pill.is-red::before { background: var(--dp-red); }
+
+/* ---------- Tabelle: intestazione scura, righe alternate, spigoli netti ---------- */
+.dp-table-wrap { overflow-x: auto; border-radius: 0; }
+.dp-table { width: 100%; border-collapse: collapse; font-size: var(--dp-fs-detail); line-height: 1.385; }
+.dp-table th {
+  background: var(--dp-navy); color: var(--dp-white); font-weight: 500; text-align: left;
+  padding: 12px 16px; white-space: nowrap;
+}
+.dp-table td { padding: 12px 16px; border-bottom: 1px solid var(--dp-line); color: var(--dp-text-2); vertical-align: top; }
+.dp-table tbody tr:nth-child(even) td { background: var(--dp-surface); }
+.dp-table td:first-child { color: var(--dp-navy); font-weight: 600; }
+.dp-table td.is-focus { color: var(--dp-blue); font-weight: 600; }
+.dp-table .num { font-family: var(--dp-mono); text-align: right; white-space: nowrap; color: var(--dp-navy); }
+.dp-table th.num { text-align: right; font-family: var(--dp-sans); color: var(--dp-white); }
+
+/* ---------- Controlli: tab, segmenti, bottoni ---------- */
+.dp-tabs { display: flex; gap: 8px; border-bottom: var(--dp-bw) solid var(--dp-line); overflow-x: auto; scrollbar-width: none; margin-bottom: 40px; }
+.dp-tabs::-webkit-scrollbar { display: none; }
+.dp-tab {
+  display: inline-flex; align-items: center; gap: 8px; flex: none; padding: 12px 16px; margin-bottom: calc(var(--dp-bw) * -1);
+  background: none; border: 0; border-bottom: var(--dp-bw) solid transparent; cursor: pointer;
+  font-family: var(--dp-sans); font-size: var(--dp-fs-detail); font-weight: 500; color: var(--dp-text-2);
+}
+.dp-tab:hover { color: var(--dp-navy); }
+.dp-tab.is-active { color: var(--dp-blue); border-bottom-color: var(--dp-blue); }
+.dp-tab.is-done { color: var(--dp-navy); }
+.dp-tab-num {
+  font-family: var(--dp-mono); font-size: var(--dp-fs-note); width: 22px; height: 22px; border-radius: 6px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--dp-surface); color: var(--dp-text-2); border: 1px solid var(--dp-line);
+}
+.dp-tab.is-active .dp-tab-num { background: var(--dp-blue); border-color: var(--dp-blue); color: var(--dp-white); }
+.dp-tab.is-done .dp-tab-num { background: var(--dp-navy); border-color: var(--dp-navy); color: var(--dp-white); }
+
+.dp-seg { display: inline-flex; border: var(--dp-bw) solid var(--dp-line); border-radius: var(--dp-r-ctl); overflow: hidden; background: var(--dp-white); }
+.dp-seg button {
+  padding: 8px 16px; background: none; border: 0; cursor: pointer;
+  font-family: var(--dp-sans); font-size: var(--dp-fs-detail); font-weight: 500; color: var(--dp-text-2);
+}
+.dp-seg button + button { border-left: var(--dp-bw) solid var(--dp-line); }
+.dp-seg button:hover { color: var(--dp-navy); }
+.dp-seg button.is-active { background: var(--dp-navy); color: var(--dp-white); }
+.dp-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 24px; }
+
+.dp-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 24px; cursor: pointer;
+  border: var(--dp-bw) solid var(--dp-blue); border-radius: var(--dp-r-ctl); background: var(--dp-blue); color: var(--dp-white);
+  font-family: var(--dp-sans); font-size: var(--dp-fs-detail); font-weight: 500; transition: background .15s, border-color .15s;
+}
+.dp-btn:hover { background: var(--dp-navy); border-color: var(--dp-navy); }
+.dp-btn.is-ghost { background: var(--dp-white); color: var(--dp-navy); border-color: var(--dp-line); }
+.dp-btn.is-ghost:hover { border-color: var(--dp-navy); background: var(--dp-white); }
+.dp-btn:disabled { opacity: .35; cursor: not-allowed; }
+.dp-btn:focus-visible, .dp-tab:focus-visible, .dp-seg button:focus-visible { outline: 3px solid var(--dp-blue-light); outline-offset: 2px; }
+
+/* ---------- Grafici ---------- */
+.dp-chart { min-width: 0; }
+.dp-chart-title { font-size: var(--dp-fs-block); font-weight: 600; line-height: 1.33; }
+.dp-chart-sub { font-size: var(--dp-fs-detail); color: var(--dp-text-2); margin-top: 4px; }
+.dp-chart-body { margin-top: 20px; width: 100%; }
+.dp-chart-body svg { display: block; width: 100%; height: auto; overflow: visible; }
+.dp-chart-body text { font-family: var(--dp-sans); }
+.dp-mono-t { font-family: var(--dp-mono); }
+.dp-legend { display: flex; flex-wrap: wrap; gap: 8px 24px; margin-bottom: 12px; font-size: var(--dp-fs-note); color: var(--dp-navy); }
+.dp-legend span { display: inline-flex; align-items: center; gap: 8px; }
+.dp-legend i { width: 12px; height: 12px; display: inline-block; flex: none; }
+.dp-legend i.is-outline { border: 2px solid var(--dp-line); background: var(--dp-white); }
+.dp-legend .dp-legend-unit { margin-left: auto; font-family: var(--dp-mono); color: var(--dp-text-2); text-transform: uppercase; letter-spacing: .04em; }
+.dp-annot { margin-top: 16px; font-size: var(--dp-fs-note); line-height: 1.4; color: var(--dp-text-2); }
+
+/* ---------- Diagrammi ---------- */
+.dp-flow { display: flex; align-items: center; gap: 0; overflow-x: auto; padding: 4px 2px; }
+.dp-flow > .dp-block, .dp-flow > .dp-note { flex: none; min-width: 150px; }
+.dp-flow-arrow { flex: none; position: relative; width: 56px; height: 3px; background: var(--dp-blue); margin: 0 4px; }
+.dp-flow-arrow::after {
+  content: ''; position: absolute; right: -1px; top: -5px; width: 0; height: 0;
+  border-left: 10px solid var(--dp-blue); border-top: 6.5px solid transparent; border-bottom: 6.5px solid transparent;
+}
+.dp-flow-arrow.is-dashed { background: none; border-top: 3px dashed var(--dp-text-2); height: 0; }
+.dp-flow-arrow.is-dashed::after { display: none; }
+.dp-badge-num {
+  display: inline-flex; align-items: center; justify-content: center; min-width: 24px; height: 24px; padding: 0 6px; border-radius: 50%;
+  background: var(--dp-navy); color: var(--dp-white); font-family: var(--dp-mono); font-size: var(--dp-fs-note);
+}
+.dp-badge-num.is-red { background: var(--dp-red); }
+
+/* Icone: 48x48, tratto blu; la variante piccola serve solo dentro i diagrammi */
+.dp-icon { width: 48px; height: 48px; display: block; flex: none; }
+.dp-icon.is-sm { width: 32px; height: 32px; }
+.dp-icon-cell { display: flex; gap: 16px; align-items: flex-start; }
+.dp-icon-cell .dp-h { font-size: var(--dp-fs-body); }
+
+/* ---------- Codice e formule ---------- */
+.dp-code {
+  background: var(--dp-white); border: var(--dp-bw) solid var(--dp-line); border-radius: var(--dp-r);
+  padding: 16px 24px; font-family: var(--dp-mono); font-size: var(--dp-fs-detail); line-height: 1.9; overflow-x: auto; white-space: pre;
+}
+.dp-code .k { color: var(--dp-blue); }
+.dp-code .c { color: var(--dp-text-2); }
+.dp-code .id { color: var(--dp-navy); }
+.dp-code .hl { display: block; background: var(--dp-blue-bg); margin: 0 -24px; padding: 0 24px; }
+.dp-eq { display: flex; align-items: center; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--dp-line); flex-wrap: wrap; }
+.dp-eq:last-child { border-bottom: 0; }
+.dp-eq-label { font-family: var(--dp-mono); font-size: var(--dp-fs-note); color: var(--dp-text-2); width: 120px; flex: none; text-transform: uppercase; letter-spacing: .04em; }
+.dp-eq-f { flex: 1; min-width: 200px; font-size: var(--dp-fs-body); }
+.dp-eq-note { font-size: var(--dp-fs-note); color: var(--dp-text-2); width: 190px; flex: none; text-align: right; line-height: 1.4; }
+
+/* ---------- Pannelli (navigazione a sezioni) ---------- */
+.dp-panel { display: none; }
+.dp-panel.is-active { display: block; animation: dp-fade .3s ease both; }
+@keyframes dp-fade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .dp-panel.is-active { animation: none; } }
+.dp-bnav {
+  position: sticky; bottom: 0; z-index: 20; margin-top: 48px; background: var(--dp-white);
+  border-top: var(--dp-bw) solid var(--dp-line); padding: 16px 0; display: flex; align-items: center; justify-content: space-between; gap: 16px;
+}
+.dp-progress { display: flex; align-items: center; gap: 12px; font-family: var(--dp-mono); font-size: var(--dp-fs-note); color: var(--dp-text-2); text-transform: uppercase; letter-spacing: .04em; }
+.dp-progress-bar { width: 120px; height: 4px; background: var(--dp-line); overflow: hidden; }
+.dp-progress-fill { height: 100%; background: var(--dp-blue); transition: width .3s; width: 0; }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1000px) {
+  .dp-cols-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dp-cols-main { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 720px) {
+  :root { --dp-fs-title: 28px; --dp-fs-hero: 40px; --dp-pad: 20px; }
+  .dp-cols-2, .dp-cols-3, .dp-cols-4 { grid-template-columns: minmax(0, 1fr); }
+  .dp-eq-note { display: none; }
+  .dp-eq-label { width: 100%; }
+  .dp-bnav { gap: 8px; }
+  .dp-progress-bar { width: 64px; }
+}
+
+</style>
+<style>
+  /* Page-level helpers only; design tokens stay untouched. */
+  .sep { border-top: 2px solid var(--dp-line); margin-top: 48px; padding-top: 48px; }
+  .stack > * + * { margin-top: 12px; }
+  .dp-block .dp-label { display: block; margin-top: 12px; }
+  .dp-block .dp-label:first-of-type { margin-top: 0; }
+  .dp-block p { margin: 4px 0 0; }
+  ul.tight { margin: 0; padding-left: 20px; }
+  ul.tight li { margin: 6px 0; }
+  .quote { font-style: italic; color: var(--dp-text-2); }
+  /* Fixed diagram: no horizontal scrolling, boxes share the width */
+  .dp-flow { overflow: visible; }
+  .dp-flow > .dp-block, .dp-flow > .dp-perimeter { flex: 1 1 0; min-width: 0; }
+  .dp-flow-arrow { flex: 0 1 56px; min-width: 24px; }
+  /* Tool tags: green = supplied in the repo, red = your team builds it */
+  :root { --ok-green: #1E7A4C; --ok-green-bg: #E6F4EC; }
+  .tool { display: inline-block; margin: 2px 4px 2px 0; padding: 2px 10px; border: var(--dp-bw) solid; border-radius: 999px;
+          font-family: var(--dp-mono); font-size: var(--dp-fs-note); line-height: 1.5; white-space: nowrap; }
+  .tool.is-ready { background: var(--ok-green-bg); border-color: var(--ok-green); color: var(--ok-green); }
+  a.tool { text-decoration: none; }
+  a.tool:hover { text-decoration: underline; }
+  .tool.is-todo { background: var(--dp-red-bg); border-color: var(--dp-red); color: var(--dp-red); }
+  .dp-stack-tables > * + * { margin-top: 32px; }
+  .dp-block .repo-path { font-size: var(--dp-fs-detail); }
+  @media (max-width: 900px) {
+    .dp-flow { flex-direction: column; align-items: stretch; overflow: visible; }
+    .dp-flow > .dp-block, .dp-flow > .dp-perimeter { min-width: 0; }
+    .dp-flow-arrow { transform: rotate(90deg); margin: 28px auto; }
+  }
+</style>
+</head>
+<body>
+<div class="dp-page">
+
+  <div class="dp-topbar">
+    <span class="dp-eyebrow">Eurapco / Hackathon · 28 October 2026</span>
+    <span class="dp-brand"><svg width="26" height="26" aria-hidden="true" focusable="false" viewBox="0 0 210 210" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M127.24 107.052L117.61 79.7398C117.243 78.6967 117.737 77.5226 118.747 77.0665C120.457 76.2894 122.197 75.5588 123.962 74.8788C124.195 74.7902 124.418 74.6972 124.651 74.6128C126.18 74.0384 127.721 73.5063 129.267 73.0164C130.331 72.6785 131.459 73.2487 131.83 74.3003L160.042 154.319L166.296 172.061C166.922 173.83 165.11 175.516 163.425 174.73L15.8926 105.937C14.8748 105.464 14.4229 104.256 14.8664 103.2C15.597 101.452 16.3657 99.7075 17.1681 97.9718C17.2737 97.7395 17.375 97.5072 17.4848 97.2707C18.4731 95.1464 19.512 93.0601 20.5805 91.0033C23.0004 86.3535 25.6231 81.8684 28.4316 77.5564C29.8675 75.3561 31.3541 73.2022 32.8829 71.0906C34.4329 68.9536 36.0293 66.8715 37.6721 64.8274C53.6826 44.94 73.9882 29.6686 96.4814 19.8114C98.8126 18.7936 101.161 17.8265 103.534 16.9269C105.266 16.2681 107.01 15.6388 108.763 15.0391C109.84 14.6717 111.001 15.2334 111.381 16.3061L115.82 28.8873L120.938 43.4027L125.314 55.8234C125.715 56.9552 125.09 58.2095 123.95 58.5812C122.476 59.0627 121.006 59.5737 119.541 60.1227C119.308 60.2114 119.089 60.3043 118.856 60.3888C116.47 61.301 114.126 62.2935 111.833 63.3577C97.2711 70.1277 84.5337 79.9426 74.326 92.1436C73.0928 93.6176 71.8934 95.1295 70.7362 96.671C70.0352 97.6044 68.7386 97.8071 67.8179 97.1229L58.9617 90.5219C58.0326 89.8293 57.8468 88.4863 58.5563 87.5403C59.705 86.0072 60.8875 84.5079 62.0996 83.034C73.7221 68.9029 88.2797 57.5211 104.957 49.6447C105.95 49.1759 106.427 48.0188 106.064 46.9883L102.348 36.4469C101.938 35.2898 100.637 34.745 99.5221 35.2602C80.1288 44.2558 63.2399 57.4536 49.8732 73.9159C48.2219 75.9473 46.617 78.0336 45.0755 80.1664C43.5467 82.2865 42.077 84.453 40.6538 86.6618C38.8251 89.5125 37.0851 92.4308 35.4465 95.4251C34.8552 96.5063 35.2817 97.8535 36.3756 98.3645L136.89 145.235C138.575 146.02 140.387 144.335 139.762 142.565L138.968 140.314L127.235 107.043L127.24 107.052Z" fill="#D7342B"/>
+</svg><span class="dp-wordmark">Datapizza</span></span>
+  </div>
+
+  <header class="dp-head">
+    <h1 class="dp-title">Make the harness dependable</h1>
+    <p class="dp-lead">Two agents, one fictional medical policy. Your team decides how the system asks, waits, checks and acts.</p>
+  </header>
+
+  <nav class="dp-tabs" role="tablist">
+    <button class="dp-tab" data-dp-tab role="tab">The challenge</button>
+    <button class="dp-tab" data-dp-tab role="tab">Categories and states</button>
+    <button class="dp-tab" data-dp-tab role="tab">The evaluation log</button>
+  </nav>
+
+  <!-- ============ PANEL 1 · THE CHALLENGE ============ -->
+  <section class="dp-panel">
+
+    <div>
+      <span class="dp-label">The system you start from</span>
+      <h2 class="dp-intro" style="margin:8px 0 24px">One router sends each message to one of two agents</h2>
+      <div class="dp-flow">
+        <div class="dp-block"><h3>Policyholder message</h3><p>One request, as JSON</p></div>
+        <span class="dp-flow-arrow"></span>
+        <div class="dp-block is-central"><h3>Router</h3><p>Chooses the agent. The starting one is a simple keyword matcher.</p></div>
+        <span class="dp-flow-arrow"></span>
+        <div class="dp-perimeter">
+          <span class="dp-label">One agent per message</span>
+          <div class="stack">
+            <div class="dp-block"><h3>Administration</h3><p>The contract</p></div>
+            <div class="dp-block"><h3>Claims</h3><p>Medical reimbursements</p></div>
+          </div>
+        </div>
+      </div>
+      <p class="dp-muted dp-mt">Every message comes from the policyholder and contains one operation. The agents read and write through nine supplied tools, described in the next documents.</p>
+
+      <div class="dp-grid dp-cols-2 dp-mt">
+        <div class="dp-block is-flat">
+          <h3 class="dp-h">Administration</h3>
+          <p class="dp-muted">Looks after the policy itself. What a policyholder might write, and what the agent does:</p>
+          <div class="dp-table-wrap"><table class="dp-table">
+            <thead><tr><th>The policyholder writes</th><th>The agent</th><th>Insurer decides?</th></tr></thead>
+            <tbody>
+              <tr><td class="quote">“Is physiotherapy covered?”</td><td>Reads the policy and explains it. Already works in the baseline.</td><td>No</td></tr>
+              <tr><td class="quote">“Please update my address.”</td><td>Changes email, phone or postal address. Asks once for whatever is missing.</td><td>No</td></tr>
+              <tr><td class="quote">“Raise my limit to EUR 10,000.”</td><td>Increases the annual limit (3,000 / 5,000 / 10,000) or the deductible (50 / 100 / 200 / 500). Never decreases.</td><td>Yes, if the new limit is above 5,000 or the new deductible above 200</td></tr>
+              <tr><td class="quote">“I want to terminate my policy.”</td><td>Terminates it.</td><td>Always</td></tr>
+            </tbody>
+          </table></div>
+        </div>
+        <div class="dp-block is-flat">
+          <h3 class="dp-h">Claims</h3>
+          <p class="dp-muted">Handles medical reimbursements. A claim here is a reimbursement record, not an accident.</p>
+          <div class="dp-table-wrap"><table class="dp-table">
+            <thead><tr><th>The policyholder writes</th><th>The agent</th><th>Insurer decides?</th></tr></thead>
+            <tbody>
+              <tr><td class="quote">“What is the status of claim CL-H001?”</td><td>Reads the existing record and explains it. Already works in the baseline.</td><td>No</td></tr>
+              <tr><td class="quote">“Please reimburse this specialist visit.”</td><td>Checks the policy is active, the patient is insured, the date is inside the coverage period, the evidence is complete and the invoice was not already reimbursed. Then calculates and pays.</td><td>Yes, if the reimbursement is above EUR 1,500</td></tr>
+            </tbody>
+          </table></div>
+          <p class="dp-muted">Covered: specialist consultation, diagnostic test, physiotherapy. Not covered: dental care, cosmetic treatment, medicines. Evidence is text inside the JSON, never a PDF.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="sep">
+      <span class="dp-label">Two human interactions</span>
+      <h2 class="dp-intro" style="margin:8px 0 8px">Sometimes the system must stop and ask a person</h2>
+      <p class="dp-muted">There are exactly two kinds of question. Each can happen <strong>at most once per request</strong>, and they are separate: a request may need both, one, or neither. Do not ask when you do not need to.</p>
+      <div class="dp-grid dp-cols-2 dp-mt">
+        <div class="dp-block is-human">
+          <h3 class="dp-h">1 · Asking the policyholder</h3>
+          <p class="dp-muted">Clarification</p>
+          <span class="dp-label">When</span>
+          <p>The request is clear but something required is missing: “change my address” without a postal code, or a diagnostic test without its prescription text.</p>
+          <span class="dp-label">Your system</span>
+          <p>Asks <strong>one</strong> question that collects <strong>all</strong> the missing items, then stops and waits.</p>
+          <span class="dp-label">Who answers</span>
+          <p>You, playing the policyholder: send a clarification reply with the missing information. You may not change any fact already in the request.</p>
+          <span class="dp-label">Then</span>
+          <ul class="tight">
+            <li>No reply yet: the request keeps waiting. Waiting is not a failure.</li>
+            <li>Reply still not enough: close the request without the blocked action. Never ask twice.</li>
+            <li>If you cannot tell what the person wants (<code>unclear</code>), explain and close with no question. There is no “are you sure?” step.</li>
+          </ul>
+        </div>
+        <div class="dp-block is-human">
+          <h3 class="dp-h">2 · Asking the insurer</h3>
+          <p class="dp-muted">Authorization</p>
+          <span class="dp-label">When</span>
+          <p>The request is allowed but too large to do alone: limit above EUR 5,000, deductible above EUR 200, reimbursement above EUR 1,500 (exactly at the threshold needs no authorization), or any termination.</p>
+          <span class="dp-label">Your system</span>
+          <p>Builds a precise proposal (what exactly, with which values), saves it, then stops and waits.</p>
+          <span class="dp-label">Who answers</span>
+          <p>You again, as the insurer's representative, with an <code>insurer_decision</code> event: <strong>approve</strong> or <strong>reject</strong>, and a reason when rejecting.</p>
+          <span class="dp-label">Then</span>
+          <ul class="tight">
+            <li>Approved: execute exactly the saved proposal, nothing else.</li>
+            <li>Rejected: do nothing and explain the reason.</li>
+            <li>No revision, no different amount, no second round. An approval cannot make an unsupported or excluded request allowed.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="dp-note dp-mt">While you develop, you choose the replies, including invalid or insufficient ones, to test your system, always without changing supplied facts. In the common test the instructions tell you how to answer, and the insurer's decisions are fixed. Event formats: <a href="contracts.md"><code>docs/contracts.md</code></a> and <a href="../examples/events/"><code>examples/events/</code></a>.</div>
+    </div>
+
+    <div class="sep">
+    <span class="dp-label">The day</span>
+    <div class="dp-table-wrap"><table class="dp-table">
+      <thead><tr><th>Time</th><th>Phase</th><th class="num">Minutes</th><th>What happens</th></tr></thead>
+      <tbody>
+        <tr><td class="dp-mono">09:05</td><td>Presentation</td><td class="num">20</td><td>We present the case, the repository and how you will be evaluated; teams are formed.</td></tr>
+        <tr><td class="dp-mono">09:30–12:15</td><td>Build session 1</td><td class="num">165</td><td>Explore the baseline, design your harness and start implementing.</td></tr>
+        <tr><td class="dp-mono">12:15–13:30</td><td>Lunch</td><td class="num">75</td><td></td></tr>
+        <tr><td class="dp-mono">13:30–16:10</td><td>Build session 2</td><td class="num">160</td><td>Complete, test and fix your solution, and prepare your pitch. <strong>Stop building at 16:10.</strong></td></tr>
+        <tr class="is-focus"><td class="dp-mono">16:10–16:30</td><td>Common test</td><td class="num">20</td><td>Every team runs the same messages through its own system. Each message must produce an evaluation log.</td></tr>
+        <tr><td class="dp-mono">16:30–16:50</td><td>Pitches</td><td class="num">20</td><td>Five minutes per team.</td></tr>
+        <tr><td class="dp-mono">16:50–17:00</td><td>Shared observations</td><td class="num">10</td><td>Discussion of the solutions and of the common test.</td></tr>
+        <tr><td class="dp-mono">17:00–17:30</td><td>Winner and close</td><td class="num">30</td><td>Winner announcement and wrap-up.</td></tr>
+      </tbody>
+    </table></div>
+    </div>
+
+    <div class="sep">
+      <span class="dp-label">Your job</span>
+      <div class="dp-grid dp-cols-2 dp-mt">
+        <div class="dp-block">
+          <h3 class="dp-h">What you receive</h3>
+          <ul class="tight">
+            <li>Two executable agents with monolithic prompts and working enquiry flows: <a href="../agents/administration/"><code>agents/administration/</code></a> and <a href="../agents/claims/"><code>agents/claims/</code></a>.</li>
+            <li>A deliberately basic keyword router (<a href="../app/router.py"><code>app/router.py</code></a>), functioning MCP client (<a href="../app/mcp_client.py"><code>app/mcp_client.py</code></a>) and server (<a href="../mcp_server/"><code>mcp_server/</code></a>).</li>
+            <li>Nine domain tools with technical validation and narrow simulated effects: <a href="tools.md"><code>docs/tools.md</code></a>, code in <a href="../app/domain.py"><code>app/domain.py</code></a>.</li>
+            <li>Fictional policies and history, with a fresh copy for every new request: <a href="../data/initial.json"><code>data/initial.json</code></a>, rules in <a href="policy.md"><code>docs/policy.md</code></a>.</li>
+            <li>Text evidence inside JSON, message and tool schemas, fixed common vocabularies: <a href="../contracts/"><code>contracts/</code></a>.</li>
+            <li>An implemented cumulative JSON evaluation logger: <a href="../app/evaluation.py"><code>app/evaluation.py</code></a>.</li>
+            <li>Skill-loading support and empty domain skill folders: <a href="../app/skills.py"><code>app/skills.py</code></a> and <a href="../skills/"><code>skills/</code></a>.</li>
+            <li>15 public tickets, from straightforward to more complex: <a href="../examples/training/"><code>examples/training/</code></a>.</li>
+          </ul>
+        </div>
+        <div class="dp-block is-evidence">
+          <h3 class="dp-h">What your team builds</h3>
+          <ul class="tight">
+            <li>Improve the router and classification, and organize your harness around the common scope. Starting point: <a href="../app/router.py"><code>app/router.py</code></a>.</li>
+            <li>Use the minimum-information matrix (<a href="minimum-information.md"><code>docs/minimum-information.md</code></a>) to collect genuinely missing information once.</li>
+            <li>Implement workflow state, correlation and stop/resume for human replies. Keep the same domain run and original facts; never restart a reply as a new request. Starting point: <a href="../app/runtime.py"><code>app/runtime.py</code></a>, which handles the first message only; event formats in <a href="contracts.md"><code>docs/contracts.md</code></a> and <a href="../examples/events/"><code>examples/events/</code></a>.</li>
+            <li>Enforce admissibility, active-policy and date checks, authority and proposal integrity. Rules: <a href="policy.md"><code>docs/policy.md</code></a>.</li>
+            <li>Implement deterministic Claims calculation and duplicate prevention. Formula and duplicate key: <a href="policy.md"><code>docs/policy.md</code></a>.</li>
+            <li>Write and use at least one meaningful skill per agent. The loader exists (<a href="../app/skills.py"><code>app/skills.py</code></a>); the procedures are yours, in <a href="../skills/"><code>skills/</code></a>.</li>
+            <li>Design the reimbursement-record lifecycle: when to register a record, how to update outcomes, when a workflow ends without a new record. The tools <code>create_claim</code>, <code>pay_claim</code> and <code>record_claim_outcome</code> are in <a href="tools.md"><code>docs/tools.md</code></a>.</li>
+            <li>Connect your workflow, classification and human events to the supplied logger (<a href="../app/evaluation.py"><code>app/evaluation.py</code></a>).</li>
+            <li>Communicate actual results, not intended effects, and keep the enquiries working.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="dp-note dp-mt">Framework, workflow storage, interaction channel and UI are your choices. Additional tools and traces are optional. No monitoring, cost mapping or deployment is required, and no particular UI, framework or extra trace earns points by itself.</div>
+    </div>
+
+    <div class="sep">
+      <span class="dp-label">Where to go next</span>
+      <ul class="tight dp-mt">
+        <li><a href="../README.md">README</a>: set up the environment and run a first ticket.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ PANEL 2 · CATEGORIES AND STATES ============ -->
+  <section class="dp-panel">
+
+    <span class="dp-label">Three things, kept apart</span>
+    <h2 class="dp-intro" style="margin:8px 0 24px">Every request is described by a request category, an agent state and a request outcome</h2>
+    <div class="dp-grid dp-cols-3">
+      <div class="dp-block">
+        <span class="dp-label">Request category</span>
+        <h3 class="dp-h">What was asked?</h3>
+        <p>Identifies the requested operation.</p>
+        <span class="dp-label">Where you find it</span>
+        <p class="repo-path"><a href="../contracts/vocabulary.json"><code>request_categories</code></a> in vocabulary.json · <a href="../contracts/evaluation.schema.json"><code>request_category</code></a> in the log</p>
+        <span class="dp-label">What it is for</span>
+        <p>We compare it with the expected category for each message of the common test.</p>
+        <span class="dp-label">What your team does</span>
+        <p>Classify every message correctly: improve the router (<a href="../app/router.py"><code>app/router.py</code></a>) and set the category before the request waits, completes or closes.</p>
+      </div>
+      <div class="dp-block">
+        <span class="dp-label">Agent state</span>
+        <h3 class="dp-h">Where is the agent in handling the request?</h3>
+        <p>Identifies the state of the agent process that is handling the request.</p>
+        <span class="dp-label">Where you find it</span>
+        <p class="repo-path"><a href="../contracts/vocabulary.json"><code>agent_states</code></a> in vocabulary.json · <a href="../contracts/evaluation.schema.json"><code>agent_state</code></a> in the log</p>
+        <span class="dp-label">What it is for</span>
+        <p>It shows whether the request is being processed, is waiting for a person or is finished. A request that asks a person must pass through a waiting state.</p>
+        <span class="dp-label">What your team does</span>
+        <p>Your system must check and set the agent state at every step, including stop and resume for human replies. The baseline only handles the first message.</p>
+      </div>
+      <div class="dp-block is-evidence">
+        <span class="dp-label">Request outcome</span>
+        <h3 class="dp-h">What happened to the request?</h3>
+        <p>Identifies the result.</p>
+        <span class="dp-label">Where you find it</span>
+        <p class="repo-path"><a href="../contracts/vocabulary.json"><code>request_outcomes</code></a> in vocabulary.json · <a href="../contracts/evaluation.schema.json"><code>request_outcome</code></a>, <code>reason</code> and <code>message</code> in the log</p>
+        <span class="dp-label">What it is for</span>
+        <p>We check it against the real tool results and the final data snapshot in the log.</p>
+        <span class="dp-label">What your team does</span>
+        <p>Report the actual result of each request, never the intended one, and explain it in <code>reason</code> and <code>message</code>.</p>
+      </div>
+    </div>
+    <div class="dp-note is-evidence dp-mt">Already in the repo: the three lists, the checks that reject unknown values (<a href="../contracts/"><code>contracts/*.schema.json</code></a>) and the logger that stores them (<a href="../app/evaluation.py"><code>app/evaluation.py</code></a>). Your system decides which value each request gets.</div>
+
+    <span class="dp-label dp-mt">Examples</span>
+    <div class="dp-table-wrap"><table class="dp-table">
+      <thead><tr><th>Request category</th><th>Agent state</th><th>Request outcome</th><th>What it means</th></tr></thead>
+      <tbody>
+        <tr><td class="dp-mono">reimbursement_request</td><td><span class="dp-pill is-navy">completed</span></td><td class="dp-mono">paid</td><td>A reimbursement was requested and paid.</td></tr>
+        <tr><td class="dp-mono">reimbursement_request</td><td><span class="dp-pill is-navy">closed_without_execution</span></td><td class="dp-mono">not_covered</td><td>Still a reimbursement request, but the service is excluded, so nothing was paid.</td></tr>
+        <tr><td class="dp-mono">reimbursement_request</td><td><span class="dp-pill">awaiting_clarification</span></td><td class="dp-mono">information_requested</td><td>A missing prescription is not an unidentifiable request: the category stays and the request waits for the reply.</td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="sep">
+      <span class="dp-label">1 · Request categories</span>
+      <h2 class="dp-intro" style="margin:8px 0 16px">Each agent has its own list</h2>
+      <div class="dp-legend">
+        <span><span class="tool is-ready">tool_name</span> supplied in the repo</span>
+        <span><span class="tool is-todo">to_build</span> not supplied: your team builds it</span>
+      </div>
+      <div class="dp-stack-tables">
+        <div>
+          <h3 class="dp-h">Administration</h3>
+          <div class="dp-table-wrap"><table class="dp-table">
+            <thead><tr><th>Request category</th><th>Meaning</th><th>Tools</th></tr></thead>
+            <tbody>
+              <tr><td class="dp-mono">policy_enquiry</td><td>Read and explain existing policy facts; no write</td><td><a class="tool is-ready" href="tools.md">get_policy</a></td></tr>
+              <tr><td class="dp-mono">contact_update</td><td>Change holder email, phone or postal address; active policy required</td><td><a class="tool is-ready" href="tools.md">get_policy</a><a class="tool is-ready" href="tools.md">update_contact_details</a></td></tr>
+              <tr><td class="dp-mono">coverage_change</td><td>Change annual limit or deductible within the supported increase rules</td><td><a class="tool is-ready" href="tools.md">get_policy</a><a class="tool is-ready" href="tools.md">update_coverage</a><span class="tool is-todo">proposal_store</span></td></tr>
+              <tr><td class="dp-mono">policy_termination</td><td>Explicit instruction to terminate; always insurer-authorized</td><td><a class="tool is-ready" href="tools.md">get_policy</a><a class="tool is-ready" href="tools.md">terminate_policy</a><span class="tool is-todo">proposal_store</span></td></tr>
+              <tr><td class="dp-mono">out_of_scope_iban</td><td>IBAN change, unsupported</td><td class="dp-muted">None</td></tr>
+              <tr><td class="dp-mono">out_of_scope_renewal</td><td>Policy renewal, unsupported</td><td class="dp-muted">None</td></tr>
+              <tr><td class="dp-mono">out_of_scope_claims</td><td>A Claims operation: outside this agent, but possibly supported by the system</td><td class="dp-muted">None</td></tr>
+              <tr><td class="dp-mono">out_of_scope_other</td><td>Other unsupported operation</td><td class="dp-muted">None</td></tr>
+              <tr><td class="dp-mono">unclear</td><td>No operation identifiable; close without asking</td><td class="dp-muted">None</td></tr>
+            </tbody>
+          </table></div>
+        </div>
+        <div>
+          <h3 class="dp-h">Claims</h3>
+          <div class="dp-table-wrap"><table class="dp-table">
+            <thead><tr><th>Request category</th><th>Meaning</th><th>Tools</th></tr></thead>
+            <tbody>
+              <tr><td class="dp-mono">reimbursement_request</td><td>New medical reimbursement request, including recognized non-covered services</td><td><a class="tool is-ready" href="tools.md">get_policy</a><a class="tool is-ready" href="tools.md">list_claims</a><a class="tool is-ready" href="tools.md">create_claim</a><a class="tool is-ready" href="tools.md">pay_claim</a><a class="tool is-ready" href="tools.md">record_claim_outcome</a><span class="tool is-todo">reimbursement_calculator</span><span class="tool is-todo">duplicate_check</span><span class="tool is-todo">proposal_store</span></td></tr>
+              <tr><td class="dp-mono">claim_enquiry</td><td>Read and explain an existing reimbursement record; no reopening</td><td><a class="tool is-ready" href="tools.md">get_claim</a><a class="tool is-ready" href="tools.md">list_claims</a></td></tr>
+              <tr><td class="dp-mono">out_of_scope_claim_integration</td><td>Integrate or reopen an existing reimbursement with new documents, unsupported</td><td class="dp-muted">None</td></tr>
+              <tr><td class="dp-mono">out_of_scope_administration</td><td>An Administration operation: outside this agent, but possibly supported by the system</td><td class="dp-muted">None</td></tr>
+              <tr><td class="dp-mono">out_of_scope_other</td><td>Other unsupported operation</td><td class="dp-muted">None</td></tr>
+              <tr><td class="dp-mono">unclear</td><td>No operation identifiable; close without asking</td><td class="dp-muted">None</td></tr>
+            </tbody>
+          </table></div>
+        </div>
+      </div>
+      <p class="dp-muted dp-mt">Where the green tools are: listed in <a href="../app/contracts.py"><code>app/contracts.py</code></a>, implemented in <a href="../app/domain.py"><code>app/domain.py</code></a>, served by <a href="../mcp_server/"><code>mcp_server/</code></a>, documented in <a href="tools.md"><code>docs/tools.md</code></a>, with schemas in <a href="../contracts/tools.schema.json"><code>contracts/tools.schema.json</code></a>. Each agent can only use its own tools.</p>
+      <div class="dp-note dp-mt">For unsupported variants you may keep the operation category or use an appropriate out-of-scope one with a clear reason: there is no single imposed mapping. A supported request must not be rejected globally just because the first router chose the wrong agent. The tools are the minimum set: you may add others.</div>
+    </div>
+
+    <div class="sep">
+      <span class="dp-label">2 · Agent states</span>
+      <h2 class="dp-intro" style="margin:8px 0 8px">The same six agent states for both agents</h2>
+      <p class="dp-muted">The state of the agent process that is handling the request. List: <a href="../contracts/vocabulary.json">agent_states in vocabulary.json</a>.</p>
+      <div class="dp-table-wrap dp-mt"><table class="dp-table">
+        <thead><tr><th>Agent state</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td><span class="dp-pill is-blue">processing</span></td><td>Currently handling the request</td></tr>
+          <tr><td><span class="dp-pill">awaiting_clarification</span></td><td>Suspended, waiting for the one policyholder reply</td></tr>
+          <tr><td><span class="dp-pill">awaiting_authorization</span></td><td>Suspended, waiting for the insurer decision</td></tr>
+          <tr><td><span class="dp-pill is-navy">completed</span></td><td>Finished with an answer, a successful effect or a coherent team-defined completion</td></tr>
+          <tr><td><span class="dp-pill is-navy">closed_without_execution</span></td><td>Closed without the requested effect; the request outcome explains why</td></tr>
+          <tr><td><span class="dp-pill is-red">failed</span></td><td>A technical failure prevented normal completion</td></tr>
+        </tbody>
+      </table></div>
+      <div class="dp-note dp-mt">Your system must check and set the agent state. You may keep richer internal states, as long as you map them to these six in the log.</div>
+    </div>
+
+    <div class="sep">
+      <span class="dp-label">3 · Request outcomes</span>
+      <h2 class="dp-intro" style="margin:8px 0 8px">What happened to the request</h2>
+      <p class="dp-muted">The result of the request. List: <a href="../contracts/vocabulary.json">request_outcomes in vocabulary.json</a>.</p>
+      <div class="dp-table-wrap dp-mt"><table class="dp-table">
+        <thead><tr><th>Request outcome</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td class="dp-mono">in_progress</td><td>The request is still being handled; no result yet</td></tr>
+          <tr><td class="dp-mono">information_requested</td><td>The one clarification was asked; waiting for the policyholder</td></tr>
+          <tr><td class="dp-mono">authorization_requested</td><td>The proposal was sent; waiting for the insurer</td></tr>
+          <tr><td class="dp-mono">answered</td><td>An enquiry was answered from actual records</td></tr>
+          <tr><td class="dp-mono">updated</td><td>A contact or coverage update was applied</td></tr>
+          <tr><td class="dp-mono">terminated</td><td>The policy was terminated after the insurer approved</td></tr>
+          <tr><td class="dp-mono">paid</td><td>A reimbursement was paid (simulated); a real payment record exists</td></tr>
+          <tr><td class="dp-mono">no_change</td><td>Nothing to change: the requested values already hold, or the policy is already terminated</td></tr>
+          <tr><td class="dp-mono">duplicate</td><td>The invoice already belongs to an existing claim; its reference is reported and nothing new is created or paid</td></tr>
+          <tr><td class="dp-mono">not_covered</td><td>The service is excluded from the policy</td></tr>
+          <tr><td class="dp-mono">inactive_policy</td><td>The policy is not active, so the operation cannot proceed</td></tr>
+          <tr><td class="dp-mono">outside_coverage_period</td><td>The service date is outside the coverage period</td></tr>
+          <tr><td class="dp-mono">not_insured</td><td>The patient is not an insured person on this policy</td></tr>
+          <tr><td class="dp-mono">out_of_scope</td><td>The operation is not supported; explained and closed</td></tr>
+          <tr><td class="dp-mono">unclear</td><td>No operation could be identified; closed without a question</td></tr>
+          <tr><td class="dp-mono">insufficient_information</td><td>Required information was still missing after the one clarification; closed without executing</td></tr>
+          <tr><td class="dp-mono">insurer_rejected</td><td>The insurer rejected the proposal; nothing was executed</td></tr>
+          <tr><td class="dp-mono">zero_reimbursement</td><td>The calculated reimbursement is zero</td></tr>
+          <tr><td class="dp-mono">invalid_input</td><td>A value is invalid under the policy rules and cannot be accepted as given, for example a limit outside the catalogue</td></tr>
+          <tr><td class="dp-mono">technical_failure</td><td>A technical failure prevented normal completion</td></tr>
+          <tr><td class="dp-mono">handover_required</td><td>The three correction attempts for a tool error were used up; stop and hand over to a human with a report (rule in <a href="tools.md"><code>docs/tools.md</code></a>)</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <!-- ============ PANEL 3 · THE EVALUATION LOG ============ -->
+  <section class="dp-panel">
+
+    <span class="dp-label">Your evidence</span>
+    <h2 class="dp-intro" style="margin:8px 0 8px">Every message produces one JSON log</h2>
+    <p class="dp-muted">We evaluate the results in these logs and the pitch you give. The log records what actually happened, not what the model says happened.</p>
+
+    <div class="dp-grid dp-cols-main dp-mt">
+      <div class="dp-block is-evidence">
+        <h3 class="dp-h">One log per initial request</h3>
+        <p>A clarification reply or an insurer decision is another event in the <strong>same</strong> request: it is added to the same log, not a new one. When the request waits, the log shows the waiting state; after the reply, the same log is updated until the final result.</p>
+      </div>
+      <div class="dp-block is-flat">
+        <span class="dp-label">Supplied</span>
+        <p>The <a href="../app/evaluation.py">logger</a> already exists. You connect your workflow to it; you do not write the JSON yourself.</p>
+      </div>
+    </div>
+
+    <div class="sep">
+      <span class="dp-label">What appears in the log</span>
+      <div class="dp-table-wrap dp-mt"><table class="dp-table">
+        <thead><tr><th>Field</th><th>What it shows</th><th>Filled by</th></tr></thead>
+        <tbody>
+          <tr><td class="dp-mono">team_id</td><td>Your team, from <code>TEAM_ID</code> in <a href="../.env.example"><code>.env</code></a></td><td>Automatic</td></tr>
+          <tr><td class="dp-mono">run_id</td><td>This execution of the request</td><td>Automatic</td></tr>
+          <tr><td class="dp-mono">ticket_id, policy_id</td><td>The request and the policy it concerns</td><td>Automatic</td></tr>
+          <tr><td class="dp-mono">handling_agent</td><td><code>administration</code> or <code>claims</code>: the agent that actually handled the message. Required when the request waits, completes or closes without execution</td><td>Your code calls the logger</td></tr>
+          <tr><td class="dp-mono">request_category</td><td>The requested operation. Required when the request waits, completes or closes without execution</td><td>Your code calls the logger</td></tr>
+          <tr><td class="dp-mono">agent_state</td><td>Where the agent is in handling the request: one of the six agent states</td><td>Your code calls the logger</td></tr>
+          <tr><td class="dp-mono">request_outcome, reason, message</td><td>What happened, why, and what was told to the policyholder</td><td>Your code calls the logger</td></tr>
+          <tr><td class="dp-mono">human_rounds</td><td>How many clarifications and authorizations were requested</td><td>Your code calls the logger</td></tr>
+          <tr><td class="dp-mono">events</td><td>The ordered history: incoming messages and replies, routing, every tool call with its actual result, model responses, errors</td><td>Tool calls: automatic. The rest: your code</td></tr>
+          <tr><td class="dp-mono">domain_snapshot</td><td>The simulated data after the run, so real effects can be checked against what was claimed</td><td>Your code calls the logger (the <a href="../app/__main__.py">baseline CLI</a> does it at the end)</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+
+    <div class="sep">
+      <span class="dp-label">A trimmed example</span>
+      <h2 class="dp-intro" style="margin:8px 0 24px">A request that is waiting for a postal code</h2>
+      <div class="dp-code">{
+  <span class="k">"team_id"</span>: "TEAM-1",
+  <span class="k">"ticket_id"</span>: "T04",
+  <span class="k">"handling_agent"</span>: "administration",
+  <span class="k">"request_category"</span>: "contact_update",
+  <span class="hl">  <span class="k">"agent_state"</span>: "awaiting_clarification",</span>
+  <span class="hl">  <span class="k">"request_outcome"</span>: "information_requested",</span>
+  <span class="k">"human_rounds"</span>: { "clarification": 1, "authorization": 0 },
+  <span class="k">"events"</span>: [ <span class="c">/* input, routing, tool_call, tool_result, … */</span> ],
+  <span class="k">"domain_snapshot"</span>: { <span class="c">/* policies and claims, unchanged */</span> }
+}</div>
+      <p class="dp-muted dp-mt">The log must agree with reality: a record that says <code>paid</code> should be backed by a real payment event and a matching change in the data. Check your files with <code>python -m app validate-log logs/RUN_ID.json</code>. Details of the logger are in <a href="contracts.md">Events and logs</a>.</p>
+    </div>
+  </section>
+
+  <footer class="dp-footer">
+    <span>All people, policies and payments are fictional</span>
+    <span>Datapizza / Design System V2</span>
+  </footer>
+</div>
+
+<script>
+/* Datapizza V2: navigazione a pannelli (tab + barra inferiore opzionale).
+ * Markup atteso:
+ *   <div class="dp-tabs" [data-dp-steps]> <button class="dp-tab" data-dp-tab>...</button> ... </div>
+ *   <section class="dp-panel"> ... </section> (uno per tab, nello stesso ordine)
+ *   <div class="dp-bnav"> <button data-dp-prev>, <button data-dp-next>, .dp-progress-fill, [data-dp-progress-text] </div>
+ * Con data-dp-steps sul contenitore delle tab, le tab già superate prendono lo stato "is-done".
+ * I grafici nei pannelli nascosti si disegnano da soli appena il pannello diventa visibile.
+ */
+(function () {
+  'use strict';
+  function init() {
+    var tabs = [].slice.call(document.querySelectorAll('[data-dp-tab]'));
+    var panels = [].slice.call(document.querySelectorAll('.dp-panel'));
+    if (!panels.length) return;
+    var tot = panels.length, cur = 0;
+    var steps = !!document.querySelector('.dp-tabs[data-dp-steps]');
+    var prev = document.querySelector('[data-dp-prev]'), next = document.querySelector('[data-dp-next]');
+    var fill = document.querySelector('.dp-progress-fill'), label = document.querySelector('[data-dp-progress-text]');
+
+    function go(i, scroll) {
+      cur = Math.max(0, Math.min(tot - 1, i));
+      panels.forEach(function (p, k) { p.classList.toggle('is-active', k === cur); });
+      tabs.forEach(function (t, k) {
+        t.classList.toggle('is-active', k === cur);
+        t.classList.toggle('is-done', steps && k < cur);
+        t.setAttribute('aria-selected', k === cur ? 'true' : 'false');
+      });
+      if (prev) prev.disabled = cur === 0;
+      if (next) next.disabled = cur === tot - 1;
+      if (label) label.textContent = 'Passo ' + (cur + 1) + ' di ' + tot;
+      if (fill) fill.style.width = ((cur + 1) / tot * 100) + '%';
+      if (scroll) window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (window.MathJax && window.MathJax.typesetPromise) window.MathJax.typesetPromise([panels[cur]]);
+    }
+    tabs.forEach(function (t, k) { t.addEventListener('click', function () { go(k, true); }); });
+    if (prev) prev.addEventListener('click', function () { go(cur - 1, true); });
+    if (next) next.addEventListener('click', function () { go(cur + 1, true); });
+    go(0, false);
+    window.addEventListener('load', function () {
+      if (window.MathJax && window.MathJax.typesetPromise) window.MathJax.typesetPromise();
+    });
+    window.DPNav = { go: go };
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+})();
+
+</script>
+</body>
+</html>

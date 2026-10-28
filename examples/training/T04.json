@@ -1,0 +1,9 @@
+{
+  "event_type": "request",
+  "event_id": "EV-T04-01",
+  "ticket_id": "T04",
+  "policy_id": "POL-001",
+  "author_name": "Taylor Example",
+  "timestamp": "2026-10-22T10:00:00+02:00",
+  "text": "Please change my postal address to 8 Orchard Road, Turin, Italy. I have not included the postal code."
+}

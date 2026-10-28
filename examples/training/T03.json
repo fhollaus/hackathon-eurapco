@@ -1,0 +1,9 @@
+{
+  "event_type": "request",
+  "event_id": "EV-T03-01",
+  "ticket_id": "T03",
+  "policy_id": "POL-001",
+  "author_name": "Taylor Example",
+  "timestamp": "2026-10-22T10:00:00+02:00",
+  "text": "Please change my phone number to +393339998888."
+}
