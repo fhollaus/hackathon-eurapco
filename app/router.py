@@ -25,9 +25,6 @@ _CLAIMS_INTENT = re.compile(
 
 
 def route(text):
-    return "claims" if re.search(r"\b(claim|claims|invoice|invoices|reimbursement|reimburse)\b", text, re.I) else "administration"
-
-def route2(text):
     """Route by request intent, keeping policy changes ahead of claims keywords."""
     if _ADMIN_INTENT.search(text) or _POLICY_ENQUIRY.search(text):
         return "administration"

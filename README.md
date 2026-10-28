@@ -57,13 +57,38 @@ Each invocation is a **new independent
 execution**, with a fresh domain copy, run ID and cumulative log under `logs/`.
 The CLI prints both the response and evaluation-file path. Never commit `.env`.
 
+A request waiting for a clarification resumes in the **same** run and log:
+
+```sh
+python -m app run examples/training/T04.json
+python -m app resume examples/events/clarification_reply.json   # --run RUN_ID to pick the run
+```
+
+The reply is matched to the latest waiting run of its `ticket_id`. Workflow state
+(conversation, waiting state, human rounds, processed event IDs) is kept in
+`.runtime/workflows/RUN_ID.json`. A reply to a run that is not waiting, of the wrong
+type or already processed is rejected without touching the log. A second
+clarification is not asked: the request closes with `insufficient_information`.
+
+Writes that need the insurer never reach the domain from the model: `terminate_policy`,
+`update_coverage` with a final limit above 5000.00 or deductible above 200.00, and
+`pay_claim` above 1500.00 are blocked in `app/runtime.py` (logged as an
+`AuthorizationRequired` error event). The model must return a proposal instead.
+Before any `update_coverage`, the harness reads the policy (an extra `get_policy` in the
+log) and blocks a value below the current one (`UnsupportedDecrease`), before any
+authorization: the request closes as `invalid_input`.
+Before `create_claim` it checks `list_claims` for the duplicate key (provider ID + invoice
+number + invoice-date year; `DuplicateInvoice`). Before `pay_claim` it recomputes the
+reimbursement from the claim's expense and the current deductible and remaining limit, and
+blocks any other amount (`AmountMismatch`) or a zero payment (`ZeroReimbursement`).
+
 ## Starting behavior
 
 Policy and reimbursement enquiries retrieve and explain existing records. A small
 keyword router chooses an agent. Both agents have monolithic prompts and their
 domain tools. Required human interactions are described in those prompts; the
-initial loop can ask/stop but **does not receive or resume human replies**.
-The CLI rejects reply events explicitly rather than pretending to have resumed.
+loop can ask/stop and resume on a clarification reply, but **does not yet resume
+on an insurer decision**: `resume` rejects it explicitly.
 
 Business checks mostly depend on prompt instructions. There is no finished
 clarification/authorization state machine, deterministic reimbursement calculator,

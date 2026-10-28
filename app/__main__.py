@@ -45,16 +45,35 @@ async def run(path):
     request = json.loads(path.read_text(encoding="utf-8"))
     validator("events.schema.json").validate(request)
     if request["event_type"] != "request":
-        raise CliError("This baseline runs initial requests only. Reply events are not admitted or resumed: "
-                       "implement correlation and resumption yourself (see docs/contracts.md).")
+        raise CliError("Reply events are not admitted by run, which starts a new execution: "
+                       "deliver the reply to its waiting run with `python -m app resume EVENT.json`.")
     if not os.environ.get("ANTHROPIC_API_KEY"):
         raise CliError("ANTHROPIC_API_KEY is not set. Copy .env.example to .env and add your key.")
     from app.runtime import run_request
     store = DomainStore()
     run_id = store.start_run()
     log = EvaluationLog(request, run_id, os.environ.get("TEAM_ID", "TEAM-1"))
+    await run_logged(run_request(request, run_id, log), log, store, run_id)
+
+
+async def resume(path, run_id=None):
+    event = json.loads(path.read_text(encoding="utf-8"))
+    if not os.environ.get("ANTHROPIC_API_KEY"):
+        raise CliError("ANTHROPIC_API_KEY is not set. Copy .env.example to .env and add your key.")
+    from app.runtime import ResumeError, admit, resume_request
     try:
-        final = await run_request(request, run_id, log)
+        workflow = admit(event, run_id)
+    except ResumeError as exc:
+        raise CliError(str(exc)) from None
+    print(f"Resuming run {workflow['run_id']} of ticket {workflow['ticket_id']}.")
+    log = EvaluationLog.load(workflow["log_path"])
+    await run_logged(resume_request(event, workflow, log), log, DomainStore(), workflow["run_id"])
+
+
+async def run_logged(work, log, store, run_id):
+    """Await the runtime; save any failure and the final domain snapshot in the evaluation log."""
+    try:
+        final = await work
         print(json.dumps(final, indent=2))
     except Exception as exc:
         # Record exception types (the real causes, not the wrapper), never raw provider bodies/credentials.
@@ -76,6 +95,9 @@ def main():
     sub.add_parser("check", help="Check MCP discovery/read/write without an API key.")
     command = sub.add_parser("run", help="Run one independent initial ticket through the real baseline.")
     command.add_argument("ticket", type=Path)
+    command = sub.add_parser("resume", help="Deliver a clarification reply to the waiting run of its ticket.")
+    command.add_argument("event", type=Path)
+    command.add_argument("--run", dest="run_id", help="Waiting run to resume; default: latest for the ticket.")
     command = sub.add_parser("validate-log", help="Validate a cumulative evaluation JSON file.")
     command.add_argument("path", type=Path)
     args = parser.parse_args()
@@ -84,6 +106,8 @@ def main():
             asyncio.run(check())
         elif args.command == "run":
             asyncio.run(run(args.ticket))
+        elif args.command == "resume":
+            asyncio.run(resume(args.event, args.run_id))
         else:
             record = json.loads(args.path.read_text(encoding="utf-8"))
             errors = list(validator("evaluation.schema.json").iter_errors(record))
